@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini AI - Ultra Fast</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Icons (Phosphor) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            body { background-color: #0f172a; color: #f1f5f9; }
+            .bg-white { background-color: #1e293b !important; }
+            .border-slate-200 { border-color: #334155 !important; }
+            .text-slate-700 { color: #cbd5e1 !important; }
+            .text-slate-600 { color: #94a3b8 !important; }
+            .bg-slate-100 { background-color: #334155 !important; }
+            .bg-slate-50 { background-color: #0f172a !important; }
+        }
+
+        .chat-container {
+            height: calc(100vh - 160px);
+        }
+
+        .fade-in { animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .markdown-content h1, .markdown-content h2, .markdown-content h3 { font-weight: 700; margin-top: 1rem; margin-bottom: 0.5rem; color: #3b82f6; }
+        .markdown-content p { margin-bottom: 0.75rem; line-height: 1.5; }
+        .markdown-content ul, .markdown-content ol { padding-left: 1.25rem; margin-bottom: 0.75rem; }
+        .markdown-content code { background-color: rgba(0,0,0,0.05); padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9em; }
+        .dark .markdown-content code { background-color: rgba(255,255,255,0.1); }
+        .markdown-content pre { background-color: #1e293b; color: #f1f5f9; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-bottom: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.05); }
+        
+        .message-bubble {
+            max-width: 85%;
+            transition: transform 0.1s ease;
+        }
+
+        .typing-indicator span {
+            width: 4px;
+            height: 4px;
+            background-color: #3b82f6;
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+
+    <!-- HEADER -->
+    <header class="bg-white border-b border-slate-200 px-6 py-3 flex justify-between items-center z-20 shadow-sm">
+        <div class="flex items-center gap-2 text-blue-600 font-bold text-xl tracking-tight">
+            <i class="ph-fill ph-sparkle text-2xl"></i> Gemini AI
+        </div>
+        <button onclick="app.resetChat()" class="p-2 text-slate-400 hover:text-red-500 transition-colors">
+            <i class="ph ph-trash text-xl"></i>
+        </button>
+    </header>
+
+    <!-- MAIN CHAT AREA -->
+    <main class="flex-1 flex flex-col max-w-4xl w-full mx-auto relative overflow-hidden">
+        
+        <!-- Chat History -->
+        <div id="chat-history" class="chat-container flex-1 overflow-y-auto p-4 md:p-6 space-y-4 hide-scrollbar">
+            <!-- Messages -->
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 md:p-6 bg-white border-t border-slate-100">
+            <div class="relative max-w-3xl mx-auto flex gap-2 items-center">
+                <input type="text" id="chat-input" 
+                    class="flex-1 bg-slate-100 border-none rounded-xl px-5 py-3 text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 outline-none transition-all" 
+                    placeholder="Ask anything for a fast reply...">
+                <button id="send-btn" class="bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-md active:scale-95 disabled:opacity-50">
+                    <i class="ph-bold ph-paper-plane-right text-lg"></i>
+                </button>
+            </div>
+            <p class="text-[9px] text-slate-400 text-center mt-2 uppercase tracking-widest font-bold">Ultra-Fast Response Mode Active</p>
+        </div>
+
+    </main>
+
+    <script type="module">
+        const App = function() {
+            this.history = JSON.parse(localStorage.getItem('gemini_chat_history')) || [];
+            this.apiKey = "AIzaSyAD3-6O7f25ZC56Crk77DxvhGRqAIVgAEI"; // Connected Gemini API key
+
+            this.init = () => {
+                this.renderHistory();
+
+                document.getElementById('send-btn').addEventListener('click', () => this.handleChat());
+                document.getElementById('chat-input').addEventListener('keypress', (e) => e.key === 'Enter' && this.handleChat());
+                
+                document.getElementById('chat-input').focus();
+            };
+
+            this.resetChat = () => {
+                if (confirm("Clear conversation?")) {
+                    this.history = [];
+                    localStorage.removeItem('gemini_chat_history');
+                    document.getElementById('chat-history').innerHTML = '';
+                    this.appendMessage('ai', `History cleared. I'm ready.`);
+                }
+            };
+
+            this.callGemini = async (prompt) => {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey}`;
+                
+                // Keep history brief for speed
+                const chatHistory = this.history.slice(-6).map(m => ({
+                    role: m.role === 'user' ? 'user' : 'model',
+                    parts: [{ text: m.text }]
+                }));
+
+                const payload = {
+                    contents: [...chatHistory, { role: "user", parts: [{ text: prompt }] }],
+                    systemInstruction: { 
+                        parts: [{ text: "You are a high-speed Gemini AI. OBJECTIVE: Reply in under 5 seconds. GUIDELINES: 1. Be concise. 2. Use Google Search ONLY for real-time data or facts you aren't sure of. 3. Prioritize speed. 4. Use markdown for clarity." }] 
+                    },
+                    tools: [{ "google_search": {} }],
+                    generationConfig: {
+                        temperature: 0.4,
+                        maxOutputTokens: 800
+                    }
+                };
+
+                for (let i = 0; i < 5; i++) {
+                    try {
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        if (!response.ok) throw new Error('API Error');
+                        const data = await response.json();
+                        
+                        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        return { text };
+                    } catch (e) {
+                        const delay = Math.pow(2, i) * 1000;
+                        await new Promise(res => setTimeout(res, delay));
+                    }
+                }
+                return { text: "Error: Request timeout." };
+            };
+
+            this.handleChat = async () => {
+                const input = document.getElementById('chat-input');
+                const btn = document.getElementById('send-btn');
+                const text = input.value.trim();
+                if (!text || btn.disabled) return;
+
+                this.appendMessage('user', text);
+                input.value = '';
+                btn.disabled = true;
+
+                // Show mini loader
+                const loader = this.showLoader();
+
+                try {
+                    const result = await this.callGemini(text);
+                    loader.remove();
+                    this.appendMessage('ai', result.text);
+                } catch (e) {
+                    loader.remove();
+                    this.appendMessage('ai', "I couldn't process that quickly enough. Please retry.");
+                } finally {
+                    btn.disabled = false;
+                }
+            };
+
+            this.showLoader = () => {
+                const container = document.getElementById('chat-history');
+                const loader = document.createElement('div');
+                loader.className = 'flex justify-start fade-in mb-2';
+                loader.innerHTML = `
+                    <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-2 typing-indicator">
+                        <span></span> <span></span> <span></span>
+                    </div>
+                `;
+                container.appendChild(loader);
+                container.scrollTop = container.scrollHeight;
+                return loader;
+            };
+
+            this.appendMessage = (role, text) => {
+                const message = { role, text, time: new Date().toISOString() };
+                this.history.push(message);
+                localStorage.setItem('gemini_chat_history', JSON.stringify(this.history));
+                this.renderMessage(message);
+            };
+
+            this.renderMessage = (msg) => {
+                const container = document.getElementById('chat-history');
+                const wrapper = document.createElement('div');
+                wrapper.className = `flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'} fade-in mb-2`;
+
+                const bubbleClass = msg.role === 'user'
+                    ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm'
+                    : 'bg-white border border-slate-200 text-slate-800 rounded-2xl rounded-tl-sm markdown-content';
+
+                wrapper.innerHTML = `
+                    <div class="message-bubble ${bubbleClass} px-4 py-2 text-sm shadow-sm">
+                        <div class="prose prose-sm prose-slate max-w-none">
+                            ${msg.role === 'ai' ? this.formatText(msg.text) : msg.text}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(wrapper);
+                container.scrollTop = container.scrollHeight;
+            };
+
+            this.renderHistory = () => {
+                document.getElementById('chat-history').innerHTML = '';
+                this.history.forEach(msg => this.renderMessage(msg));
+                if (this.history.length === 0) {
+                    this.appendMessage('ai', `Gemini Ultra-Fast initialized. Ready.`);
+                }
+            };
+
+            this.formatText = (text) => {
+                if (!text) return "";
+                return text
+                    .replace(/```([\s\S]*?)```/g, '<pre>$1</pre>')
+                    .replace(/`(.*?)`/g, '<code>$1</code>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/^\s*[-*]\s+(.*)$/gm, '<li>$1</li>')
+                    .replace(/(<li>.*<\/li>)/s, '<ul class="my-1">$1</ul>')
+                    .replace(/### (.*)/g, '<h3 class="text-blue-600 text-base font-bold">$1</h3>')
+                    .replace(/\n/g, '<br>');
+            };
+        };
+
+        const app = new App();
+        window.app = app;
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>

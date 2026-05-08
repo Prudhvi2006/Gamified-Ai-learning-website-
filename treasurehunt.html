@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SQL Treasure Hunt — The Ancient Fort</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<script src="gal_config.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#d4af37;--gold-light:#f5c842;--gold-deep:#c8962a;
+  --bg:#0a0602;--bg2:#050200;--text:#f5deb3;--text-dim:rgba(245,200,130,0.75);
+}
+body{min-height:100vh;background:radial-gradient(ellipse at 30% 20%,#1a0e02 0%,#0a0602 55%,#000 100%);color:var(--text);font-family:'Crimson Pro',serif;overflow-x:hidden;}
+.fd{font-family:'Playfair Display',serif;}
+.cp{font-family:'Crimson Pro',serif;}
+.sm{font-family:'Space Mono',monospace;}
+
+/* Texture overlay */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.4;
+  background-image:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d4af37' fill-opacity='0.03'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes puls{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes spinR{to{transform:rotate(360deg)}}
+@keyframes bounceU{0%,100%{transform:translateY(0)}40%{transform:translateY(-28px)}70%{transform:translateY(-10px)}}
+@keyframes goldFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+@keyframes glowBox{0%,100%{box-shadow:0 0 20px rgba(212,175,55,0.3)}50%{box-shadow:0 0 60px rgba(212,175,55,0.8),0 0 100px rgba(212,175,55,0.3)}}
+@keyframes imgAnim{from{opacity:0;transform:scale(1.06)}to{opacity:1;transform:scale(1)}}
+@keyframes stampIn{0%{transform:scale(3) rotate(-15deg);opacity:0}60%{transform:scale(0.92) rotate(2deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes doorSwing{0%{transform:perspective(900px) rotateY(0deg)}100%{transform:perspective(900px) rotateY(-80deg)}}
+@keyframes pulse2{0%,100%{opacity:0.5}50%{opacity:1}}
+
+.anim-fadeup{animation:fadeUp 0.55s ease-out both;}
+.anim-fadein{animation:fadeIn 0.4s ease both;}
+.anim-float{animation:floatY 3s ease-in-out infinite;}
+.anim-spin{animation:spinR 1.1s linear infinite;}
+.anim-bounce{animation:bounceU 0.9s ease;}
+.anim-glow{animation:glowBox 2s ease-in-out infinite;}
+.anim-imgload{animation:imgAnim 0.7s ease both;}
+.anim-stamp{animation:stampIn 0.65s cubic-bezier(.17,.67,.35,1.25) both;}
+
+.shimmer-text{
+  background:linear-gradient(90deg,#d4af37,#fff8dc,#d4af37,#f5c842,#d4af37);
+  background-size:250% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;animation:shimmer 3.5s linear infinite;
+}
+
+input::placeholder{color:rgba(212,175,55,0.3);}
+input:focus{outline:none;}
+
+.scroll-area::-webkit-scrollbar{width:5px;}
+.scroll-area::-webkit-scrollbar-track{background:transparent;}
+.scroll-area::-webkit-scrollbar-thumb{background:rgba(212,175,55,0.25);border-radius:999px;}
+
+.gold-part{position:fixed;pointer-events:none;z-index:9999;animation:goldFall linear forwards;}
+
+/* Header */
+#header{
+  position:relative;z-index:10;
+  border-bottom:1px solid rgba(212,175,55,0.14);
+  background:rgba(8,4,1,0.85);backdrop-filter:blur(14px);
+  padding:13px 22px;display:flex;align-items:center;justify-content:space-between;
+}
+#header-title .fd{font-size:15px;font-weight:900;letter-spacing:0.08em;}
+#header-title .sm{font-size:8px;color:rgba(212,175,55,0.45);letter-spacing:0.2em;}
+#score-display{display:none;align-items:center;gap:16px;}
+#score-display .sm{font-size:8px;color:rgba(212,175,55,0.5);}
+#score-display .fd{font-size:19px;color:var(--gold-light);font-weight:900;}
+
+/* Main */
+#main{position:relative;z-index:10;max-width:920px;margin:0 auto;padding:22px 18px 50px;}
+
+/* Screens */
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* Intro */
+#intro-hero{border-radius:18px;overflow:hidden;position:relative;margin-bottom:26px;border:2px solid rgba(212,175,55,0.35);}
+#intro-hero img{width:100%;height:250px;object-fit:cover;display:none;}
+#intro-hero-loader{height:250px;background:#0a0602;display:flex;align-items:center;justify-content:center;}
+#intro-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,6,2,0.96) 0%,rgba(10,6,2,0.2) 60%,transparent 100%);}
+#intro-hero-text{position:absolute;bottom:0;left:0;right:0;padding:18px 22px;}
+#intro-title{text-align:center;margin-bottom:24px;}
+#intro-title h1.fd{font-size:34px;font-weight:900;}
+#rules-list{display:flex;flex-direction:column;gap:10px;margin-bottom:26px;}
+.rule-card{
+  background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.16);
+  border-radius:12px;padding:12px 16px;display:flex;gap:12px;align-items:flex-start;
+}
+.rule-icon{font-size:24px;flex-shrink:0;margin-top:2px;}
+.rule-title{font-size:13px;color:var(--gold);margin-bottom:3px;letter-spacing:0.04em;}
+.rule-body{font-size:14px;color:rgba(245,200,130,0.75);line-height:1.6;}
+#stages-preview{
+  background:rgba(212,175,55,0.03);border:1px solid rgba(212,175,55,0.14);
+  border-radius:12px;padding:13px 16px;margin-bottom:26px;
+}
+.stage-pill{
+  background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.18);
+  border-radius:8px;padding:5px 8px;display:inline-flex;align-items:center;gap:5px;margin:3px;
+}
+#start-btn{
+  background:linear-gradient(135deg,#c8962a 0%,#f5c842 50%,#c8962a 100%);
+  color:#0a0602;border:none;border-radius:13px;padding:15px 44px;
+  font-family:'Playfair Display',serif;font-size:17px;font-weight:900;letter-spacing:0.1em;
+  cursor:pointer;display:inline-flex;align-items:center;gap:12px;transition:all 0.2s;
+}
+#start-btn:disabled{background:rgba(212,175,55,0.15);color:rgba(212,175,55,0.5);cursor:not-allowed;animation:none;}
+
+/* Playing layout */
+#play-grid{display:grid;grid-template-columns:1fr 270px;gap:18px;align-items:start;}
+#console-col{display:flex;flex-direction:column;gap:14px;}
+#chat-log{
+  background:rgba(8,4,1,0.75);border:1px solid rgba(212,175,55,0.18);
+  border-radius:16px;padding:18px;max-height:58vh;overflow-y:auto;
+  display:flex;flex-direction:column;gap:13px;
+}
+#input-dock{
+  background:rgba(8,4,1,0.85);border:1px solid rgba(212,175,55,0.28);
+  border-radius:14px;padding:13px 15px;
+}
+#input-row{display:flex;gap:9px;align-items:center;margin-bottom:9px;}
+#answer-input{
+  flex:1;background:transparent;border:none;
+  font-family:'Space Mono',monospace;font-size:13px;color:var(--text);
+  caret-color:var(--gold);
+}
+.btn-icon{
+  background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);
+  border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--gold);
+  display:flex;align-items:center;transition:all 0.2s;
+}
+.btn-icon.recording{background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.45);color:#ef4444;}
+#submit-btn{
+  background:linear-gradient(135deg,#c8962a,#f5c842);border:none;
+  border-radius:8px;padding:7px 15px;
+  font-family:'Space Mono',monospace;font-size:11px;font-weight:700;
+  color:#0a0602;cursor:pointer;display:flex;align-items:center;gap:5px;transition:opacity 0.2s;
+}
+#submit-btn:disabled{opacity:0.38;cursor:not-allowed;}
+#input-footer{display:flex;justify-content:space-between;align-items:center;}
+#hint-btn{
+  background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.18);
+  border-radius:7px;padding:4px 11px;
+  font-family:'Space Mono',monospace;font-size:9px;
+  color:var(--gold);cursor:pointer;display:flex;align-items:center;gap:4px;
+}
+#hint-btn:disabled{color:rgba(212,175,55,0.28);cursor:not-allowed;}
+#mic-err{margin-top:7px;font-size:10px;color:#ef4444;font-family:'Space Mono',monospace;display:none;}
+
+/* Sidebar */
+#sidebar{display:flex;flex-direction:column;gap:14px;}
+#cur-stage-box{
+  background:rgba(212,175,55,0.05);border:2px solid rgba(212,175,55,0.28);
+  border-radius:14px;padding:15px;text-align:center;
+}
+#map-bar{background:rgba(10,6,2,0.8);border:1px solid rgba(212,175,55,0.25);border-radius:14px;padding:14px 16px;}
+#map-dots{display:flex;gap:5px;flex-wrap:wrap;}
+.map-dot{
+  width:30px;height:30px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;transition:all 0.3s;
+}
+.map-dot.done{background:linear-gradient(135deg,#d4af37,#f5c842);font-size:13px;border:none;}
+.map-dot.active{background:rgba(212,175,55,0.12);border:2px solid var(--gold);animation:puls 1.5s ease-in-out infinite;}
+.map-dot.locked{background:rgba(255,255,255,0.03);border:1px solid rgba(212,175,55,0.12);}
+#stats-box{background:rgba(8,4,1,0.7);border:1px solid rgba(212,175,55,0.13);border-radius:13px;padding:13px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.stat-cell{text-align:center;background:rgba(212,175,55,0.04);border-radius:9px;padding:9px 5px;}
+
+/* Chat entries */
+.entry-system{text-align:center;}
+.entry-location{display:flex;gap:10px;align-items:flex-start;}
+.entry-clue{background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.22);border-radius:12px;padding:13px 15px;}
+.entry-player{display:flex;justify-content:flex-end;}
+.entry-player-inner{
+  background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.18);
+  border-radius:12px;padding:9px 14px;max-width:72%;
+}
+.entry-success{background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.28);border-radius:12px;padding:11px 15px;}
+.entry-fail{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.22);border-radius:12px;padding:11px 15px;}
+.entry-hint{background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.28);border-radius:11px;padding:11px 14px;}
+.entry-error{font-size:10px;color:rgba(239,68,68,0.6);font-style:italic;font-family:'Space Mono',monospace;}
+.clue-pre{font-family:'Space Mono',monospace;font-size:13px;color:#f5deb3;white-space:pre-wrap;word-break:break-word;line-height:1.75;}
+.spin-dot{width:15px;height:15px;border-radius:50%;border:2px solid rgba(212,175,55,0.15);border-top-color:var(--gold);flex-shrink:0;}
+
+/* Place card */
+.place-card{border-radius:18px;overflow:hidden;border:2px solid var(--gold);box-shadow:0 0 40px rgba(212,175,55,0.35),0 0 80px rgba(212,175,55,0.1);background:#0a0602;}
+.place-header{background:linear-gradient(90deg,#c8962a,#f5c842,#c8962a);padding:9px 18px;display:flex;align-items:center;gap:10px;}
+.place-img-wrap{position:relative;height:210px;background:#111;overflow:hidden;}
+.place-img{width:100%;height:100%;object-fit:cover;}
+.place-img-grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,6,2,0.92) 0%,transparent 55%);}
+.place-img-caption{position:absolute;bottom:12px;left:16px;right:16px;}
+.place-body{padding:12px 18px 16px;}
+.place-next{margin-top:10px;display:flex;align-items:center;gap:6px;}
+
+/* Finale */
+#finale{
+  position:fixed;inset:0;z-index:1000;
+  display:none;align-items:center;justify-content:center;
+  flex-direction:column;overflow:hidden;text-align:center;
+}
+#finale.active{display:flex;}
+#finale-phase0{padding:32px;}
+#finale-phase1{padding:32px;}
+#finale-phase2{padding:36px;max-width:500px;}
+.score-box{
+  background:rgba(212,175,55,0.08);border:2px solid var(--gold);
+  border-radius:22px;padding:26px 36px;margin:20px 0;
+  box-shadow:0 0 60px rgba(212,175,55,0.25);
+}
+.floating-row{display:flex;gap:18px;justify-content:center;margin:22px 0;flex-wrap:wrap;}
+
+/* === SPECTACULAR FINALE === */
+#fireworks-canvas{position:fixed;inset:0;z-index:998;pointer-events:none;display:none;}
+#fireworks-canvas.show{display:block;}
+#screen-flash{
+  position:fixed;inset:0;z-index:1001;pointer-events:none;
+  background:radial-gradient(circle at center,#ffffff 0%,#fff7d6 30%,transparent 70%);
+  opacity:0;
+}
+#screen-flash.flash{animation:screenFlash 0.7s ease-out forwards;}
+@keyframes screenFlash{
+  0%{opacity:0}15%{opacity:1}100%{opacity:0}
+}
+.light-beams{
+  position:fixed;inset:0;z-index:999;pointer-events:none;display:none;
+  background:
+    repeating-conic-gradient(from 0deg at 50% 50%,
+      transparent 0deg,
+      rgba(255,215,90,0.18) 6deg,
+      transparent 12deg,
+      transparent 30deg);
+  animation:beamSpin 18s linear infinite;
+  mix-blend-mode:screen;
+}
+.light-beams.show{display:block;}
+@keyframes beamSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+.treasure-chest{
+  font-size:120px;display:inline-block;
+  animation:chestShake 2.4s ease-in-out forwards;
+  filter:drop-shadow(0 0 28px rgba(255,200,80,0.8));
+}
+@keyframes chestShake{
+  0%{transform:rotate(0) scale(1);filter:drop-shadow(0 0 0 rgba(255,200,80,0))}
+  20%{transform:rotate(-7deg) scale(1.05)}
+  40%{transform:rotate(7deg) scale(1.08)}
+  60%{transform:rotate(-5deg) scale(1.12)}
+  80%{transform:rotate(0) scale(1.2);filter:drop-shadow(0 0 50px rgba(255,200,80,1))}
+  100%{transform:rotate(0) scale(1.1);filter:drop-shadow(0 0 30px rgba(255,200,80,0.8))}
+}
+
+.crown-rise{
+  display:inline-block;font-size:90px;
+  animation:crownRise 2s cubic-bezier(.2,.8,.4,1) forwards;
+  filter:drop-shadow(0 0 30px rgba(255,215,90,1));
+}
+@keyframes crownRise{
+  0%{opacity:0;transform:translateY(120px) scale(0.3) rotate(-180deg)}
+  60%{opacity:1;transform:translateY(-15px) scale(1.2) rotate(20deg)}
+  100%{opacity:1;transform:translateY(0) scale(1) rotate(0)}
+}
+
+.victory-badge{
+  display:inline-block;padding:10px 28px;
+  background:linear-gradient(90deg,#ffd700,#ff8800,#ffd700);
+  background-size:200% 100%;
+  color:#0a0602;font-family:'Cinzel',serif;font-weight:900;
+  font-size:14px;letter-spacing:0.35em;border-radius:999px;
+  box-shadow:0 0 40px rgba(255,200,60,0.7),inset 0 0 20px rgba(255,255,255,0.4);
+  animation:badgeShine 2.5s linear infinite, badgePop 0.7s ease;
+  margin-bottom:18px;
+}
+@keyframes badgeShine{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes badgePop{
+  0%{transform:scale(0) rotate(-8deg);opacity:0}
+  60%{transform:scale(1.15) rotate(3deg);opacity:1}
+  100%{transform:scale(1) rotate(0);opacity:1}
+}
+
+.victory-title{
+  font-family:'Cinzel',serif;font-weight:900;
+  font-size:clamp(36px,7vw,68px);
+  background:linear-gradient(180deg,#fff7d6 0%,#ffd700 40%,#ff9020 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 60px rgba(255,200,60,0.5);
+  letter-spacing:0.08em;margin:8px 0;
+  animation:titleGlow 3s ease-in-out infinite;
+}
+@keyframes titleGlow{
+  0%,100%{filter:drop-shadow(0 0 16px rgba(255,200,60,0.4))}
+  50%{filter:drop-shadow(0 0 36px rgba(255,200,60,0.9))}
+}
+
+.stat-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+  max-width:480px;margin:18px auto;
+}
+.stat-tile{
+  background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.4);
+  border-radius:12px;padding:14px 8px;text-align:center;
+  animation:statPop 0.6s ease backwards;
+}
+.stat-tile:nth-child(1){animation-delay:0.1s}
+.stat-tile:nth-child(2){animation-delay:0.25s}
+.stat-tile:nth-child(3){animation-delay:0.4s}
+@keyframes statPop{from{opacity:0;transform:translateY(20px) scale(0.8)}to{opacity:1;transform:translateY(0) scale(1)}}
+.stat-tile-num{font-family:'Cinzel',serif;font-weight:900;font-size:32px;color:#ffd700;line-height:1;}
+.stat-tile-lbl{font-family:'Space Mono',monospace;font-size:9px;color:rgba(255,200,60,0.6);letter-spacing:0.2em;margin-top:6px;}
+
+.vault-doors{
+  position:relative;width:200px;height:240px;margin:0 auto;
+}
+.vault-door{
+  position:absolute;top:0;width:100px;height:240px;
+  background:linear-gradient(180deg,#5a3a10,#2a1808);
+  border:3px solid #d4af37;
+  box-shadow:inset 0 0 20px rgba(0,0,0,0.6),0 0 30px rgba(212,175,55,0.4);
+  display:flex;align-items:center;justify-content:center;
+  font-size:46px;
+}
+.vault-door.left{left:0;border-right:none;border-radius:8px 0 0 8px;transform-origin:left center;animation:doorL 2.4s ease-in-out forwards;}
+.vault-door.right{right:0;border-left:none;border-radius:0 8px 8px 0;transform-origin:right center;animation:doorR 2.4s ease-in-out forwards;}
+@keyframes doorL{0%{transform:perspective(800px) rotateY(0)}100%{transform:perspective(800px) rotateY(-95deg)}}
+@keyframes doorR{0%{transform:perspective(800px) rotateY(0)}100%{transform:perspective(800px) rotateY(95deg)}}
+.vault-glow{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:80px;opacity:0;
+  filter:drop-shadow(0 0 30px gold);
+  animation:vaultGlow 1.6s ease-in-out 2s forwards;
+}
+@keyframes vaultGlow{
+  0%{opacity:0;transform:scale(0.4)}
+  60%{opacity:1;transform:scale(1.25)}
+  100%{opacity:1;transform:scale(1)}
+}
+
+.victory-actions{
+  display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:18px;
+}
+.victory-btn{
+  background:linear-gradient(135deg,#d4af37,#ff8800);
+  border:none;color:#0a0602;font-family:'Cinzel',serif;font-weight:900;
+  font-size:13px;letter-spacing:0.2em;padding:12px 24px;border-radius:999px;
+  cursor:pointer;transition:all 0.2s;
+  box-shadow:0 6px 22px rgba(255,150,40,0.45);
+}
+.victory-btn:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 10px 32px rgba(255,150,40,0.6);}
+.victory-btn.ghost{
+  background:transparent;border:1px solid rgba(212,175,55,0.5);color:#ffd700;box-shadow:none;
+}
+.victory-btn.ghost:hover{background:rgba(212,175,55,0.1)}
+
+/* Spinner large */
+.spin-lg{width:34px;height:34px;border-radius:50%;border:3px solid rgba(212,175,55,0.15);border-top-color:var(--gold);}
+
+/* Loading indicator */
+#loading-indicator{display:none;align-items:center;gap:9px;}
+#loading-indicator.show{display:flex;}
+
+@media(max-width:700px){
+  #play-grid{grid-template-columns:1fr;}
+  #sidebar{flex-direction:row;flex-wrap:wrap;}
+  #sidebar>div{flex:1;min-width:200px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header id="header">
+  <div style="display:flex;align-items:center;gap:11px;">
+    <span style="font-size:26px;">🏰</span>
+    <div id="header-title">
+      <div class="fd shimmer-text">SQL TREASURE HUNT</div>
+      <div class="sm">THE ANCIENT FORT</div>
+    </div>
+  </div>
+  <div id="score-display">
+    <div style="text-align:right;">
+      <div class="sm">SCORE</div>
+      <div class="fd" id="hdr-score">0/10</div>
+    </div>
+    <div style="width:1px;height:32px;background:rgba(212,175,55,0.18);"></div>
+    <div style="text-align:right;">
+      <div class="sm">STAGE</div>
+      <div class="fd" id="hdr-stage" style="font-size:15px;color:var(--gold);">1/10</div>
+    </div>
+  </div>
+  <button id="mute-btn" title="Toggle sound" style="position:absolute;right:18px;top:14px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);color:#d4af37;width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">🔊</button>
+</header>
+
+<!-- Gold particles container -->
+<div id="particles"></div>
+
+<!-- Spectacular finale overlays -->
+<canvas id="fireworks-canvas"></canvas>
+<div id="light-beams" class="light-beams"></div>
+<div id="screen-flash"></div>
+
+<!-- Finale overlay -->
+<div id="finale">
+  <div id="finale-phase0" class="anim-fadein"></div>
+  <div id="finale-phase1" class="anim-fadein" style="display:none;"></div>
+  <div id="finale-phase2" class="anim-stamp" style="display:none;"></div>
+</div>
+
+<!-- Main -->
+<main id="main">
+
+  <button onclick="if(confirm('Return to Dashboard? Your progress will be saved.'))window.location.href='dashboard.html'" style="position:fixed;top:14px;left:14px;z-index:1000;background:rgba(10,6,2,0.85);border:1px solid rgba(212,175,55,0.4);color:var(--gold);padding:8px 14px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.18em;cursor:pointer;">‹ DASHBOARD</button>
+
+  <!-- INTRO SCREEN -->
+  <div id="screen-intro" class="screen active" style="max-width:700px;margin:0 auto;padding:16px 0 40px;">
+    <!-- Hero -->
+    <div class="anim-fadeup" id="intro-hero">
+      <div id="intro-hero-loader"><div class="spin-lg anim-spin"></div></div>
+      <img id="intro-img" src="https://picsum.photos/seed/fort9821/700/280" alt="The Ancient Fort"
+        onload="this.style.display='block';document.getElementById('intro-hero-loader').style.display='none';" />
+      <div id="intro-hero-overlay"></div>
+      <div id="intro-hero-text">
+        <div class="sm" style="font-size:9px;color:rgba(212,175,55,0.65);letter-spacing:0.25em;margin-bottom:5px;">YOUR DESTINATION</div>
+        <div class="fd shimmer-text" style="font-size:30px;font-weight:900;">THE ANCIENT FORT</div>
+        <div class="cp" style="font-size:13px;color:rgba(245,200,130,0.7);font-style:italic;margin-top:4px;">
+          10 chambers sealed by SQL — solve all to reach the Treasure Vault.
+        </div>
+      </div>
+    </div>
+    <!-- Title -->
+    <div class="anim-fadeup" style="text-align:center;margin-bottom:24px;animation-delay:0.1s;">
+      <div class="sm" style="font-size:10px;color:rgba(212,175,55,0.55);letter-spacing:0.3em;margin-bottom:8px;">HOW TO PLAY</div>
+      <h1 class="fd shimmer-text" style="font-size:34px;font-weight:900;">SQL TREASURE HUNT</h1>
+    </div>
+    <!-- Rules -->
+    <div id="rules-list"></div>
+    <!-- Stage preview -->
+    <div id="stages-preview" class="anim-fadeup" style="animation-delay:0.5s;">
+      <div class="sm" style="font-size:9px;color:rgba(212,175,55,0.55);letter-spacing:0.2em;margin-bottom:10px;">YOUR 10-STAGE JOURNEY</div>
+      <div id="stages-pills"></div>
+    </div>
+    <!-- Start -->
+    <div class="anim-fadeup" style="text-align:center;animation-delay:0.6s;">
+      <button id="start-btn" class="anim-glow" onclick="startGame()">
+        <span style="font-size:20px;">🗝️</span> BEGIN THE HUNT <span style="font-size:20px;">🏰</span>
+      </button>
+      <div class="sm" style="font-size:9px;color:rgba(212,175,55,0.35);margin-top:10px;letter-spacing:0.15em;">
+        10 QUESTIONS · PURE SQL ONLY · NO RIDDLES
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAYING SCREEN -->
+  <div id="screen-playing" class="screen">
+    <div id="play-grid">
+      <!-- Console -->
+      <div id="console-col">
+        <div id="chat-log" class="scroll-area"></div>
+        <!-- Input dock -->
+        <div id="input-dock">
+          <div id="input-row">
+            <span class="sm" style="color:var(--gold);font-size:13px;">›</span>
+            <input id="answer-input" type="text" placeholder="Type your SQL answer..."
+              onkeydown="if(event.key==='Enter')submitAnswer();" autocomplete="off" spellcheck="false"/>
+            <button id="mic-btn" class="btn-icon" onclick="toggleMic()" title="Voice input">
+              🎤
+            </button>
+            <button id="submit-btn" onclick="submitAnswer()">
+              ✈ SUBMIT
+            </button>
+          </div>
+          <div id="input-footer">
+            <button id="hint-btn" onclick="getHint()">💡 GET HINT</button>
+            <span class="sm" id="footer-label" style="font-size:8px;color:rgba(212,175,55,0.35);">PRESS ENTER TO SUBMIT</span>
+          </div>
+          <div id="mic-err"></div>
+        </div>
+      </div>
+      <!-- Sidebar -->
+      <div id="sidebar">
+        <div id="cur-stage-box">
+          <div class="sm" style="font-size:8px;color:rgba(212,175,55,0.45);letter-spacing:0.2em;margin-bottom:8px;">CURRENT LOCATION</div>
+          <div id="cur-emoji" style="font-size:34px;margin-bottom:8px;" class="anim-float">🏰</div>
+          <div id="cur-name" class="fd" style="font-size:13px;color:var(--gold);font-weight:700;margin-bottom:5px;line-height:1.3;"></div>
+          <div id="cur-hint" class="cp" style="font-size:11px;color:rgba(245,200,130,0.55);font-style:italic;line-height:1.5;"></div>
+        </div>
+        <div id="map-bar">
+          <div class="sm" style="font-size:9px;color:rgba(212,175,55,0.55);letter-spacing:0.2em;margin-bottom:10px;" id="map-label">TREASURE MAP — 0/10 UNLOCKED</div>
+          <div id="map-dots"></div>
+        </div>
+        <div id="stats-box">
+          <div class="sm" style="font-size:8px;color:rgba(212,175,55,0.45);letter-spacing:0.18em;margin-bottom:9px;">EXPEDITION STATUS</div>
+          <div class="stat-grid">
+            <div class="stat-cell">
+              <div style="font-size:14px;">✅</div>
+              <div class="fd" id="stat-solved" style="font-size:19px;color:var(--gold-light);font-weight:700;">0</div>
+              <div class="sm" style="font-size:8px;color:rgba(212,175,55,0.45);">Solved</div>
+            </div>
+            <div class="stat-cell">
+              <div style="font-size:14px;">🔒</div>
+              <div class="fd" id="stat-left" style="font-size:19px;color:var(--gold-light);font-weight:700;">9</div>
+              <div class="sm" style="font-size:8px;color:rgba(212,175,55,0.45);">Left</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ─── Sound Engine (synthesized via Web Audio — no audio files needed) ──
+const Sound = (function(){
+  let ctx = null, master = null, musicGain = null, musicNodes = [];
+  let muted = (localStorage.getItem('treasure_muted') === '1');
+  function ensure(){
+    if(ctx) return;
+    try{
+      ctx = new (window.AudioContext||window.webkitAudioContext)();
+      master = ctx.createGain();
+      master.gain.value = muted ? 0 : 0.55;
+      master.connect(ctx.destination);
+      musicGain = ctx.createGain();
+      musicGain.gain.value = 0.18;
+      musicGain.connect(master);
+    }catch(e){ ctx = null; }
+  }
+  function tone({freq=440, dur=0.18, type='sine', vol=0.4, attack=0.01, release=0.1, slideTo=null, dest=null}){
+    if(!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    if(slideTo){ o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur); }
+    g.gain.value = 0;
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur + release);
+    o.connect(g);
+    g.connect(dest||master);
+    o.start();
+    o.stop(ctx.currentTime + dur + release + 0.05);
+  }
+  function noiseBurst({dur=0.18, vol=0.3, hp=600, dest=null}){
+    if(!ctx) return;
+    const buf = ctx.createBuffer(1, ctx.sampleRate*dur, ctx.sampleRate);
+    const ch = buf.getChannelData(0);
+    for(let i=0;i<ch.length;i++) ch[i] = (Math.random()*2-1) * (1 - i/ch.length);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const f = ctx.createBiquadFilter();
+    f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain();
+    g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(dest||master);
+    src.start();
+    src.stop(ctx.currentTime + dur + 0.02);
+  }
+  return {
+    init(){ ensure(); if(ctx && ctx.state==='suspended') ctx.resume(); },
+    isMuted(){ return muted; },
+    setMuted(m){
+      muted = !!m;
+      localStorage.setItem('treasure_muted', muted?'1':'0');
+      if(master) master.gain.value = muted?0:0.55;
+    },
+    click(){ ensure(); tone({freq:800,dur:0.04,type:'square',vol:0.12}); },
+    type(){ ensure(); tone({freq:1200+Math.random()*400,dur:0.02,type:'square',vol:0.05}); },
+    hover(){ ensure(); tone({freq:1100,dur:0.05,type:'sine',vol:0.08}); },
+    correct(){
+      ensure();
+      // Triumphant arpeggio C-E-G-C
+      const t = ctx.currentTime;
+      [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => {
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = 'triangle'; o.frequency.value = f;
+        g.gain.value = 0;
+        g.gain.linearRampToValueAtTime(0.35, t + i*0.08 + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + i*0.08 + 0.32);
+        o.connect(g); g.connect(master);
+        o.start(t + i*0.08); o.stop(t + i*0.08 + 0.34);
+      });
+      // Gold sparkle
+      setTimeout(()=>{
+        for(let i=0;i<4;i++) tone({freq:2200+i*300,dur:0.06,type:'sine',vol:0.18,attack:0.005,release:0.05});
+      }, 350);
+    },
+    wrong(){
+      ensure();
+      tone({freq:280,dur:0.18,type:'sawtooth',vol:0.32,slideTo:140});
+      setTimeout(()=>tone({freq:200,dur:0.18,type:'sawtooth',vol:0.28,slideTo:90}), 110);
+    },
+    hint(){
+      ensure();
+      tone({freq:600,dur:0.1,type:'sine',vol:0.22});
+      setTimeout(()=>tone({freq:900,dur:0.16,type:'sine',vol:0.28,slideTo:1100}), 90);
+    },
+    coin(){
+      ensure();
+      tone({freq:1320,dur:0.06,type:'square',vol:0.18});
+      setTimeout(()=>tone({freq:1760,dur:0.18,type:'square',vol:0.22,release:0.15}), 60);
+    },
+    unlock(){
+      ensure();
+      // Heavy door creak then gold bell
+      noiseBurst({dur:0.6, vol:0.18, hp:80});
+      tone({freq:120,dur:0.4,type:'sawtooth',vol:0.25,slideTo:60});
+      setTimeout(()=>{
+        tone({freq:880,dur:0.5,type:'sine',vol:0.32,release:0.4});
+        tone({freq:1320,dur:0.5,type:'sine',vol:0.22,release:0.4});
+      }, 600);
+    },
+    vault(){
+      ensure();
+      // Cinematic vault opening: deep boom + rising gold cascade
+      noiseBurst({dur:1.2, vol:0.32, hp:40});
+      tone({freq:80,dur:1.0,type:'sawtooth',vol:0.35,slideTo:40,release:0.6});
+      const t = ctx.currentTime;
+      [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((f,i)=>{
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = 'triangle'; o.frequency.value = f;
+        g.gain.value = 0;
+        g.gain.linearRampToValueAtTime(0.28, t + 0.6 + i*0.12);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6 + i*0.12 + 0.5);
+        o.connect(g); g.connect(master);
+        o.start(t + 0.6 + i*0.12); o.stop(t + 0.6 + i*0.12 + 0.55);
+      });
+    },
+    fanfare(){
+      ensure();
+      // Royal trumpet
+      const t = ctx.currentTime;
+      const seq = [{f:523.25,d:0.18},{f:523.25,d:0.18},{f:523.25,d:0.18},{f:783.99,d:0.5},{f:659.25,d:0.5},{f:1046.50,d:0.7}];
+      let off = 0;
+      seq.forEach(n => {
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = 'sawtooth'; o.frequency.value = n.f;
+        g.gain.value = 0;
+        g.gain.linearRampToValueAtTime(0.32, t + off + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + off + n.d);
+        o.connect(g); g.connect(master);
+        o.start(t + off); o.stop(t + off + n.d + 0.05);
+        off += n.d * 0.95;
+      });
+    },
+    startMusic(){
+      ensure();
+      if(musicNodes.length) return;
+      // Mysterious ambient drone with subtle pulse
+      const drone = ctx.createOscillator();
+      drone.type = 'triangle'; drone.frequency.value = 65.41; // C2
+      const droneG = ctx.createGain(); droneG.gain.value = 0.5;
+      drone.connect(droneG); droneG.connect(musicGain); drone.start();
+
+      const pad = ctx.createOscillator();
+      pad.type = 'sine'; pad.frequency.value = 130.81; // C3
+      const padG = ctx.createGain(); padG.gain.value = 0.25;
+      pad.connect(padG); padG.connect(musicGain); pad.start();
+
+      const fifth = ctx.createOscillator();
+      fifth.type = 'sine'; fifth.frequency.value = 196.00; // G3
+      const fG = ctx.createGain(); fG.gain.value = 0.18;
+      // gentle LFO on the fifth for shimmer
+      const lfo = ctx.createOscillator();
+      lfo.type = 'sine'; lfo.frequency.value = 0.18;
+      const lfoG = ctx.createGain(); lfoG.gain.value = 6;
+      lfo.connect(lfoG); lfoG.connect(fifth.frequency);
+      fifth.connect(fG); fG.connect(musicGain); fifth.start(); lfo.start();
+
+      musicNodes = [drone, pad, fifth, lfo];
+    },
+    stopMusic(){
+      try{
+        musicNodes.forEach(n => { try{ n.stop(); }catch(e){} });
+      }catch(e){}
+      musicNodes = [];
+    }
+  };
+})();
+// Resume audio on first user interaction (browsers require gesture)
+['click','keydown','touchstart'].forEach(evt =>
+  window.addEventListener(evt, () => Sound.init(), {once:true, passive:true})
+);
+
+// ─── Data ───────────────────────────────────────────────────────────────
+const STAGES = [
+  {id:1,  name:"The Fort Gates",           emoji:"🏰", hint:"The outer wall holds the first SQL rune."},
+  {id:2,  name:"The Moat Bridge",          emoji:"🌉", hint:"Cross the bridge by mastering JOIN."},
+  {id:3,  name:"The Watch Tower",          emoji:"🗼", hint:"The tower guards ORDER BY secrets."},
+  {id:4,  name:"The Armory",               emoji:"⚔️",  hint:"GROUP BY and HAVING await within."},
+  {id:5,  name:"The Royal Courtyard",      emoji:"🏛️",  hint:"The courtyard tests subquery mastery."},
+  {id:6,  name:"The Ancient Library",      emoji:"📚", hint:"Scrolls hide window function secrets."},
+  {id:7,  name:"The Underground Passage",  emoji:"🕯️",  hint:"CTEs light the path through the dark."},
+  {id:8,  name:"The Inner Sanctum",        emoji:"🔮", hint:"Transactions seal the sacred chamber."},
+  {id:9,  name:"The Treasure Antechamber", emoji:"🚪", hint:"One final lock — advanced SQL guards it."},
+  {id:10, name:"THE TREASURE VAULT",       emoji:"💎", hint:"The vault itself — claim your reward!"},
+];
+const IMG_SEEDS = [201,202,203,204,205,206,207,208,209,210];
+const RULES = [
+  {icon:"🗺️",title:"10 SQL Questions",body:"Each correct answer unlocks a new location inside the ancient fort — from the outer Gates all the way to the hidden Treasure Vault."},
+  {icon:"📸",title:"Real Place Images Revealed",body:"Answer correctly and a vivid image of that fort location appears on screen — see each chamber, tower and passage come alive as you advance."},
+  {icon:"⚔️",title:"Pure SQL — Zero Riddles",body:"Every question is a real SQL fill-in-the-blank query. Keywords, clauses, functions — no English riddles, no word games, SQL only."},
+  {icon:"💡",title:"One Hint Per Question",body:"Stuck? Request a hint and the AI nudges you toward the SQL answer without giving it away. One hint allowed per question."},
+  {icon:"💎",title:"Grand Treasure Finale",body:"Answer all 10 correctly? The vault doors swing open — a 10-second cinematic of gold, diamonds and pearls floods the screen, then your final score appears."},
+];
+
+// ─── State ──────────────────────────────────────────────────────────────
+let qNum=0, score=0, clue=null, hintUsed=false, placeUnlocked=false, loading=false;
+let listening=false, micOk=false, rec=null, micErr=null;
+
+// ─── Init ───────────────────────────────────────────────────────────────
+function init(){
+  // Rules
+  const rl=document.getElementById('rules-list');
+  RULES.forEach((r,i)=>{
+    const d=document.createElement('div');
+    d.className='rule-card anim-fadeup';
+    d.style.animationDelay=(0.1+i*0.07)+'s';
+    d.innerHTML=`<div class="rule-icon">${r.icon}</div><div><div class="rule-title fd">${r.title}</div><div class="rule-body cp">${r.body}</div></div>`;
+    rl.appendChild(d);
+  });
+  // Stage pills
+  const sp=document.getElementById('stages-pills');
+  STAGES.forEach((s,i)=>{
+    const p=document.createElement('span');
+    p.className='stage-pill';
+    p.innerHTML=`<span style="font-size:12px;">${s.emoji}</span><span class="sm" style="font-size:8px;color:rgba(212,175,55,0.6);">${i+1}. ${s.name.split(' ').slice(0,3).join(' ')}</span>`;
+    sp.appendChild(p);
+  });
+  // Mic check
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(SR){
+    micOk=true;
+    rec=new SR(); rec.lang='en-US'; rec.continuous=false; rec.interimResults=true;
+    rec.onresult=(e)=>{
+      let f='',iv='';
+      for(let i=e.resultIndex;i<e.results.length;i++)
+        e.results[i].isFinal?f+=e.results[i][0].transcript:iv+=e.results[i][0].transcript;
+      document.getElementById('answer-input').value=(f||iv).trim();
+    };
+    rec.onerror=()=>{setListening(false);};
+    rec.onend=()=>{setListening(false);};
+  } else {
+    document.getElementById('mic-btn').style.display='none';
+  }
+  // Map init
+  renderMap();
+}
+
+// ─── API ────────────────────────────────────────────────────────────────
+// Uses shared GEMINI key from gal_config.js — paste your key there.
+const GEMINI_KEY = (window.GAL_CONFIG && window.GAL_CONFIG.GEMINI_API_KEY) || 'AIzaSyAD3-6O7f25ZC56Crk77DxvhGRqAIVgAEI';
+const GEMINI_MODEL = (window.GAL_CONFIG && window.GAL_CONFIG.GEMINI_MODEL) || 'gemini-2.0-flash';
+const GEMINI_URLS = [
+  `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+];
+
+async function callAI(messages, system, maxTokens=1200){
+  if (!GEMINI_KEY || GEMINI_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+    throw new Error('Set GEMINI_API_KEY in gal_config.js');
+  }
+  const contents = (messages || []).map(m => ({
+    role:  m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: String(m.content || '') }]
+  }));
+  const body = JSON.stringify({
+    system_instruction: { parts: [{ text: system || '' }] },
+    contents,
+    generationConfig: { maxOutputTokens: maxTokens, temperature: 0.8 }
+  });
+
+  let lastErr = null;
+  // Try each URL up to 2 times each
+  for (const url of GEMINI_URLS){
+    for (let attempt = 0; attempt < 2; attempt++){
+      try{
+        const ctrl = new AbortController();
+        const timer = setTimeout(()=>ctrl.abort(), 15000);
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body,
+          signal: ctrl.signal
+        });
+        clearTimeout(timer);
+        if(!res.ok){
+          const txt = await res.text().catch(()=>'');
+          lastErr = new Error('HTTP '+res.status+(txt?(': '+txt.slice(0,120)):''));
+          // Auth/quota errors won't be fixed by retry — break inner loop
+          if(res.status===400||res.status===401||res.status===403) break;
+          await new Promise(r=>setTimeout(r, 600*(attempt+1)));
+          continue;
+        }
+        const d = await res.json();
+        const text = d?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) return text;
+        lastErr = new Error(d?.error?.message || 'No candidates returned');
+      }catch(e){
+        lastErr = e;
+        await new Promise(r=>setTimeout(r, 500*(attempt+1)));
+      }
+    }
+  }
+  throw lastErr || new Error('Gemini call failed');
+}
+
+function exJSON(t){
+  if(!t) throw new Error('Empty response');
+  let c = String(t).trim();
+  // Strip code fences
+  c = c.replace(/```(?:json)?\s*/gi,'').replace(/```/g,'').trim();
+  // Find first { and matching last }
+  const s = c.indexOf('{'), e = c.lastIndexOf('}');
+  if (s !== -1 && e !== -1 && e > s) c = c.slice(s, e+1);
+  // Common fixes: trailing commas, smart quotes
+  c = c.replace(/[\u201C\u201D]/g,'"').replace(/[\u2018\u2019]/g,"'");
+  c = c.replace(/,\s*([}\]])/g, '$1');
+  return JSON.parse(c);
+}
+
+// ─── FALLBACK QUESTION BANK ─────────────────────────────────────────────
+// Used when Gemini API is unavailable — game ALWAYS works.
+const FALLBACK_QUESTIONS = [
+  { context:"The mossy outer gate of the fort holds an iron rune carved with an ancient query. To open it, you must complete this fundamental SQL incantation.",
+    clue:"Goal: Retrieve every column from the gate_runes table.\n\n____ * FROM gate_runes;",
+    answer:"select", acceptableAnswers:["select","SELECT"] },
+  { context:"The drawbridge spans a moat of dark water. Two scrolls — knights and weapons — must be united to cross.",
+    clue:"Goal: Combine knights with their weapons where the IDs match.\n\nSELECT k.name, w.weapon\nFROM knights k\n____ JOIN weapons w ON k.id = w.knight_id;",
+    answer:"inner", acceptableAnswers:["inner","INNER"] },
+  { context:"From the watchtower, the captain's log lists every guard. You must arrange them by rank, highest first.",
+    clue:"Goal: Sort guards by rank in descending order.\n\nSELECT name, rank FROM guards\nORDER BY rank ____;",
+    answer:"desc", acceptableAnswers:["desc","DESC","descending"] },
+  { context:"The armory's iron racks count the blades of every battalion. Total them, but only show those with more than 50 swords.",
+    clue:"Goal: Count swords per battalion, only those over 50.\n\nSELECT battalion, COUNT(*) FROM swords\nGROUP BY battalion\n____ COUNT(*) > 50;",
+    answer:"having", acceptableAnswers:["having","HAVING"] },
+  { context:"In the royal courtyard, only knights whose ranks exceed the kingdom's average may approach the throne.",
+    clue:"Goal: Find knights whose rank is above the average rank.\n\nSELECT name FROM knights\nWHERE rank > (____ AVG(rank) FROM knights);",
+    answer:"select", acceptableAnswers:["select","SELECT"] },
+  { context:"The library scrolls record battles. Number each warrior by their score within their kingdom.",
+    clue:"Goal: Rank each warrior within their kingdom by score, highest first.\n\nSELECT name, kingdom, score,\n  ROW_NUMBER() ____ (PARTITION BY kingdom ORDER BY score DESC) AS rk\nFROM warriors;",
+    answer:"over", acceptableAnswers:["over","OVER"] },
+  { context:"The underground passage uses a temporary table of torches to light each step. A common table expression is required.",
+    clue:"Goal: Use a CTE to find the average torch brightness, then list torches above it.\n\n____ avg_b AS (SELECT AVG(brightness) AS a FROM torches)\nSELECT * FROM torches, avg_b WHERE brightness > avg_b.a;",
+    answer:"with", acceptableAnswers:["with","WITH"] },
+  { context:"In the inner sanctum, treasures are moved between vaults. The whole transfer must succeed — or none of it.",
+    clue:"Goal: Begin a transaction so all the writes commit together.\n\n____ TRANSACTION;\nUPDATE vault_a SET gold = gold - 100 WHERE id = 1;\nUPDATE vault_b SET gold = gold + 100 WHERE id = 2;\nCOMMIT;",
+    answer:"begin", acceptableAnswers:["begin","BEGIN","start","START"] },
+  { context:"The treasure antechamber's lock requires checking which kings actually own treasures — using EXISTS.",
+    clue:"Goal: Find every king who has at least one treasure.\n\nSELECT name FROM kings k\nWHERE ____ (SELECT 1 FROM treasures t WHERE t.king_id = k.id);",
+    answer:"exists", acceptableAnswers:["exists","EXISTS"] },
+  { context:"Inside the vault itself, gold piles must be ranked — but tied piles must share the same rank with no gaps.",
+    clue:"Goal: Rank gold piles by weight; tied piles share rank, with no gaps in the sequence.\n\nSELECT pile_id, weight,\n  ____ () OVER (ORDER BY weight DESC) AS rnk\nFROM gold_piles;",
+    answer:"dense_rank", acceptableAnswers:["dense_rank","DENSE_RANK"] },
+];
+function buildFallbackQuestion(n){
+  const stage = STAGES[n];
+  const q = FALLBACK_QUESTIONS[n] || FALLBACK_QUESTIONS[0];
+  return { context: q.context, clue: q.clue, answer: q.answer, acceptableAnswers: q.acceptableAnswers };
+}
+function evalFallbackAnswer(playerAnswer){
+  if(!clue) return { correct:false, message:"No active question." };
+  const norm = String(playerAnswer||'').trim().toLowerCase().replace(/;$/,'').replace(/\s+/g,' ');
+  const accepts = (clue.acceptableAnswers||[clue.answer]).map(s=>String(s).toLowerCase().trim());
+  const correct = accepts.includes(norm) || accepts.includes(norm.replace(/\s+/g,''));
+  const stage = STAGES[qNum];
+  const placeNames = [
+    "The Eastern Battlement","The Sentinel's Drawbridge","The Falcon's Perch",
+    "The Iron Vault Armory","The Throne of Echoes","The Hall of Forgotten Tomes",
+    "The Catacomb of Whispers","The Sealed Chamber of Oaths","The Locksmith's Forge",
+    "THE GRAND TREASURE VAULT"
+  ];
+  if(correct){
+    return {
+      correct: true,
+      message: `You have entered ${placeNames[qNum]}! The ancient stones recognize your mastery.`,
+      placeName: placeNames[qNum],
+      placeDescription: "Torches flare to life along the walls, illuminating gold trim and forgotten banners. Your name is etched into the stone of those who passed this trial."
+    };
+  }
+  return {
+    correct: false,
+    message: `Not quite — the rune still glows red. The keyword you seek is in the ${stage.hint.toLowerCase()}`,
+    placeName: null, placeDescription: null
+  };
+}
+
+// ─── UI helpers ─────────────────────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+}
+
+function appendLog(html){
+  const log=document.getElementById('chat-log');
+  const div=document.createElement('div');
+  div.className='anim-fadeup';
+  div.innerHTML=html;
+  log.appendChild(div);
+  log.scrollTop=log.scrollHeight;
+}
+
+function setLoadingUI(on){
+  loading=on;
+  document.getElementById('submit-btn').disabled=on||!document.getElementById('answer-input').value.trim()||placeUnlocked;
+  document.getElementById('hint-btn').disabled=on||hintUsed||placeUnlocked;
+  const li=document.getElementById('loading-indicator');
+  if(!li){
+    if(on){
+      const log=document.getElementById('chat-log');
+      const d=document.createElement('div');
+      d.id='loading-indicator';d.className='show';
+      d.innerHTML=`<div class="spin-dot anim-spin"></div><span class="sm" style="font-size:10px;color:rgba(212,175,55,0.45);">The vault deliberates...</span>`;
+      log.appendChild(d);log.scrollTop=log.scrollHeight;
+    }
+  } else {
+    if(on){li.className='show';li.parentElement.scrollTop=li.parentElement.scrollHeight;}
+    else{li.remove();}
+  }
+}
+
+function renderMap(){
+  const dots=document.getElementById('map-dots');
+  dots.innerHTML='';
+  document.getElementById('map-label').textContent=`TREASURE MAP — ${qNum}/10 UNLOCKED`;
+  STAGES.forEach((s,i)=>{
+    const d=document.createElement('div');
+    d.className='map-dot'+(i<qNum?' done':i===qNum?' active':' locked');
+    d.title=s.name;
+    d.textContent=i<qNum?'✓':i===qNum?s.emoji:'·';
+    dots.appendChild(d);
+  });
+}
+
+function updateSidebar(){
+  const st=STAGES[qNum]||STAGES[9];
+  document.getElementById('cur-emoji').textContent=st.emoji;
+  document.getElementById('cur-name').textContent=st.name;
+  document.getElementById('cur-hint').textContent=st.hint;
+  document.getElementById('hdr-score').textContent=score+'/10';
+  document.getElementById('hdr-stage').textContent=(qNum+1)+'/10';
+  document.getElementById('stat-solved').textContent=score;
+  document.getElementById('stat-left').textContent=Math.max(0,10-qNum-1);
+  renderMap();
+}
+
+function setListening(on){
+  listening=on;
+  const btn=document.getElementById('mic-btn');
+  btn.className='btn-icon'+(on?' recording':'');
+  btn.textContent=on?'🔇':'🎤';
+  document.getElementById('footer-label').textContent=on?'● RECORDING':'PRESS ENTER TO SUBMIT';
+}
+
+// ─── Gold Rain ───────────────────────────────────────────────────────────
+function spawnGold(){
+  const icons=["💰","💎","👑","✨","🪙","💍","🏆","⭐","🌟","💫","🔮","🥇"];
+  const cont=document.getElementById('particles');
+  cont.innerHTML='';
+  for(let i=0;i<45;i++){
+    const el=document.createElement('div');
+    el.className='gold-part';
+    el.textContent=icons[i%icons.length];
+    el.style.left=Math.random()*100+'%';
+    el.style.top='-30px';
+    el.style.fontSize=(1.2+Math.random()*1.4)+'rem';
+    el.style.animationDuration=(2.5+Math.random()*3)+'s';
+    el.style.animationDelay=(Math.random()*4)+'s';
+    cont.appendChild(el);
+  }
+}
+
+// ─── Game flow ───────────────────────────────────────────────────────────
+async function startGame(){
+  document.getElementById('start-btn').disabled=true;
+  document.getElementById('start-btn').textContent='AWAKENING...';
+  Sound.init();
+  Sound.unlock();
+  setTimeout(()=>Sound.startMusic(), 800);
+  qNum=0;score=0;clue=null;hintUsed=false;placeUnlocked=false;
+  document.getElementById('chat-log').innerHTML='';
+  showScreen('playing');
+  document.getElementById('score-display').style.display='flex';
+  updateSidebar();
+  appendLog(`<div class="entry-system"><span class="sm" style="font-size:10px;color:rgba(212,175,55,0.55);letter-spacing:0.08em;">🗝️ The ancient fort stirs... your SQL expedition begins!</span></div>`);
+  await genQuestion(0);
+}
+
+async function genQuestion(n){
+  setLoadingUI(true);
+  hintUsed=false;placeUnlocked=false;
+  document.getElementById('hint-btn').textContent='💡 GET HINT';
+  document.getElementById('hint-btn').disabled=false;
+  clue=null;
+  const st=STAGES[n];
+  const diff=n<3?'BEGINNER':n<6?'INTERMEDIATE':'ADVANCED';
+  const topics={
+    BEGINNER:'SELECT, FROM, WHERE, ORDER BY, LIMIT, DISTINCT, AS, COUNT, SUM, AVG, MIN, MAX',
+    INTERMEDIATE:'INNER JOIN, LEFT JOIN, RIGHT JOIN, GROUP BY, HAVING, subqueries, CASE WHEN, COALESCE, IN/NOT IN, BETWEEN, LIKE, OFFSET',
+    ADVANCED:'Window functions (ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, PARTITION BY, OVER), CTEs (WITH), recursive CTEs, correlated subqueries, EXISTS vs IN, UNION/INTERSECT/EXCEPT, transaction isolation levels, NULL semantics, COALESCE/NULLIF, index hints',
+  };
+  try{
+    let aiOk = false;
+    try {
+      const raw=await callAI([{role:'user',content:
+        `Generate a SQL fill-in-the-blank question for Stage ${n+1}/10 of a treasure hunt set in "${st.name}".
+
+Difficulty: ${diff}
+Draw from: ${topics[diff]}
+
+RULES — STRICTLY FOLLOW:
+- ONE blank only, shown as ____
+- The blank must be filled by a SQL keyword, clause, or function
+- The clue format: "Goal: <plain English>\\n\\n<SQL with ____>"
+- Context: one vivid sentence connecting to the stage location
+- NEVER use riddles, English puzzles, or non-SQL content
+
+Return ONLY valid JSON:
+{
+  "context": "One evocative sentence about this fort location",
+  "clue": "Goal: <description>\\n\\n<SQL query with ____>",
+  "answer": "sql keyword/clause lowercase",
+  "acceptableAnswers": ["array","of","acceptable","variations"]
+}`
+      }],
+      'You are a SQL puzzle master. Output ONLY valid JSON. Every puzzle must be a real SQL fill-in-the-blank. NO riddles.',900);
+      clue = exJSON(raw);
+      if(clue && clue.clue && clue.answer) aiOk = true;
+    } catch(aiErr){
+      console.warn('[treasure] AI question failed, using fallback:', aiErr?.message);
+    }
+
+    if(!aiOk){
+      // Fall back to local question bank — game still works
+      clue = buildFallbackQuestion(n);
+      clue._fromFallback = true;
+    }
+
+    appendLog(`<div class="entry-location"><div style="font-size:22px;flex-shrink:0;">${st.emoji}</div><div>
+      <div class="sm" style="font-size:9px;color:var(--gold);margin-bottom:4px;letter-spacing:0.12em;">STAGE ${st.id}/10 — ${st.name.toUpperCase()}${clue._fromFallback?' <span style="color:rgba(212,175,55,0.4);">· offline mode</span>':''}</div>
+      <p class="cp" style="font-size:15px;color:rgba(245,200,130,0.85);line-height:1.6;font-style:italic;">${esc(clue.context)}</p>
+    </div></div>`);
+    appendLog(`<div class="entry-clue">
+      <div class="sm" style="font-size:9px;color:var(--gold);margin-bottom:7px;letter-spacing:0.15em;">📜 SQL PUZZLE</div>
+      <pre class="clue-pre">${esc(clue.clue)}</pre>
+    </div>`);
+  }catch(e){
+    // Should be unreachable — fallback above always succeeds
+    console.error('[treasure] Unexpected genQuestion failure:', e);
+    appendLog(`<div class="entry-error">⚠ Question loading hiccup. Click "Skip Stage" or refresh.</div>`);
+  }
+  setLoadingUI(false);
+  document.getElementById('answer-input').focus();
+}
+
+async function submitAnswer(){
+  const ans=document.getElementById('answer-input').value.trim();
+  if(!ans||loading||!clue||placeUnlocked)return;
+  document.getElementById('answer-input').value='';
+  appendLog(`<div class="entry-player"><div class="entry-player-inner">
+    <div class="sm" style="font-size:8px;color:rgba(212,175,55,0.45);margin-bottom:3px;">YOUR ANSWER</div>
+    <p class="sm" style="font-size:13px;color:var(--gold-light);">${esc(ans)}</p>
+  </div></div>`);
+  setLoadingUI(true);
+  try{
+    const raw=await callAI([{role:'user',content:
+      `Evaluate this SQL fill-in-the-blank answer:
+
+PUZZLE: "${clue.clue}"
+CORRECT ANSWER: "${clue.answer}"
+ACCEPTABLE VARIATIONS: ${JSON.stringify(clue.acceptableAnswers||[])}
+PLAYER'S ANSWER: "${ans}"
+STAGE: ${STAGES[qNum].name}
+
+Rules:
+- Accept correct SQL with minor typos, case differences, or semantically equivalent expressions
+- placeName: a specific DRAMATIC location inside a historic fort (e.g. "The Eastern Battlement", "The Portcullis Gate"). Make it vivid and unique.
+- placeDescription: 2 vivid sentences describing this fort location.
+- If correct: message says "You have entered [placeName]!" and adds 1 dramatic sentence.
+- If wrong: message briefly explains the correct SQL concept.
+
+Return ONLY valid JSON:
+{
+  "correct": true/false,
+  "message": "Response message (2 sentences)",
+  "placeName": "Specific dramatic fort location name (if correct, else null)",
+  "placeDescription": "2 vivid atmospheric sentences (if correct, else null)"
+}`
+    }],'SQL answer evaluator. Be generous — accept correct SQL with minor variations. Return ONLY valid JSON.',700);
+    let r;
+    try {
+      r = exJSON(raw);
+      if(typeof r.correct !== 'boolean') throw new Error('bad shape');
+    } catch(je){
+      // AI returned malformed JSON — use local evaluator
+      r = evalFallbackAnswer(ans);
+    }
+    if(r.correct){
+      Sound.correct();
+      setTimeout(()=>Sound.coin(), 700);
+      appendLog(`<div class="entry-success">
+        <div class="sm" style="font-size:9px;color:#22c55e;margin-bottom:5px;letter-spacing:0.1em;">✅ CORRECT — LOCATION UNLOCKED</div>
+        <p class="cp" style="font-size:15px;color:rgba(200,255,200,0.9);line-height:1.6;font-style:italic;">${esc(r.message)}</p>
+      </div>`);
+      score++;placeUnlocked=true;
+      // Place card
+      const imgSeed=IMG_SEEDS[qNum];
+      const pname=r.placeName||STAGES[qNum].name;
+      const pdesc=r.placeDescription||'A magnificent chamber now revealed.';
+      const nextText=qNum+1<10?`PROCEEDING TO: ${STAGES[qNum+1]?.name?.toUpperCase()}`:'THE VAULT AWAITS...';
+      const cardDiv=document.createElement('div');
+      cardDiv.className='anim-fadeup';
+      cardDiv.innerHTML=`<div class="place-card">
+        <div class="place-header">
+          <span style="font-size:20px;">🔓</span>
+          <span class="fd" style="font-size:12px;color:#0a0602;font-weight:900;letter-spacing:0.1em;">LOCATION UNLOCKED — STAGE ${qNum+1}/10</span>
+        </div>
+        <div class="place-img-wrap">
+          <img src="https://picsum.photos/seed/${imgSeed}/600/340" alt="${esc(pname)}" class="place-img anim-imgload" onerror="this.style.display='none'"/>
+          <div class="place-img-grad"></div>
+          <div class="place-img-caption">
+            <div style="font-size:20px;margin-bottom:4px;">${STAGES[qNum].emoji}</div>
+            <div class="fd" style="font-size:17px;color:var(--gold-light);font-weight:700;">${esc(pname)}</div>
+          </div>
+        </div>
+        <div class="place-body">
+          <p class="cp" style="font-size:14px;color:rgba(245,200,130,0.88);line-height:1.65;font-style:italic;">${esc(pdesc)}</p>
+          <div class="place-next">
+            <span style="color:var(--gold);font-size:13px;">›</span>
+            <span class="sm" style="font-size:9px;color:rgba(212,175,55,0.6);letter-spacing:0.12em;">${nextText}</span>
+          </div>
+        </div>
+      </div>`;
+      document.getElementById('chat-log').appendChild(cardDiv);
+      document.getElementById('chat-log').scrollTop=document.getElementById('chat-log').scrollHeight;
+      updateSidebar();
+      const nq=qNum+1;
+      if(nq>=10){
+        setTimeout(()=>showFinale(),3800);
+      } else {
+        setTimeout(()=>{qNum=nq;updateSidebar();genQuestion(nq);},4200);
+      }
+    } else {
+      Sound.wrong();
+      appendLog(`<div class="entry-fail">
+        <div class="sm" style="font-size:9px;color:#ef4444;margin-bottom:5px;letter-spacing:0.1em;">❌ WRONG — TRY AGAIN</div>
+        <p class="cp" style="font-size:15px;color:rgba(255,200,200,0.9);line-height:1.6;font-style:italic;">${esc(r.message)}</p>
+      </div>`);
+    }
+  }catch(e){
+    // AI completely unreachable — fall back to local evaluator and continue the game
+    console.warn('[treasure] submitAnswer AI failure, using fallback:', e?.message);
+    const r = evalFallbackAnswer(ans);
+    if(r.correct){
+      Sound.correct();
+      setTimeout(()=>Sound.coin(), 700);
+      appendLog(`<div class="entry-success">
+        <div class="sm" style="font-size:9px;color:#22c55e;margin-bottom:5px;letter-spacing:0.1em;">✅ CORRECT — LOCATION UNLOCKED</div>
+        <p class="cp" style="font-size:15px;color:rgba(200,255,200,0.9);line-height:1.6;font-style:italic;">${esc(r.message)}</p>
+      </div>`);
+      score++; placeUnlocked = true;
+      const imgSeed = IMG_SEEDS[qNum];
+      const pname = r.placeName || STAGES[qNum].name;
+      const pdesc = r.placeDescription || 'A magnificent chamber now revealed.';
+      const nextText = qNum+1<10 ? `PROCEEDING TO: ${STAGES[qNum+1]?.name?.toUpperCase()}` : 'THE VAULT AWAITS...';
+      const cardDiv = document.createElement('div');
+      cardDiv.className = 'anim-fadeup';
+      cardDiv.innerHTML = `<div class="place-card">
+        <div class="place-header">
+          <span style="font-size:20px;">🔓</span>
+          <span class="fd" style="font-size:12px;color:#0a0602;font-weight:900;letter-spacing:0.1em;">LOCATION UNLOCKED — STAGE ${qNum+1}/10</span>
+        </div>
+        <div class="place-img-wrap">
+          <img src="https://picsum.photos/seed/${imgSeed}/600/340" alt="${esc(pname)}" class="place-img anim-imgload" onerror="this.style.display='none'"/>
+          <div class="place-img-grad"></div>
+          <div class="place-img-caption">
+            <div style="font-size:20px;margin-bottom:4px;">${STAGES[qNum].emoji}</div>
+            <div class="fd" style="font-size:17px;color:var(--gold-light);font-weight:700;">${esc(pname)}</div>
+          </div>
+        </div>
+        <div class="place-body">
+          <p class="cp" style="font-size:14px;color:rgba(245,200,130,0.88);line-height:1.65;font-style:italic;">${esc(pdesc)}</p>
+          <div class="place-next">
+            <span style="color:var(--gold);font-size:13px;">›</span>
+            <span class="sm" style="font-size:9px;color:rgba(212,175,55,0.6);letter-spacing:0.12em;">${nextText}</span>
+          </div>
+        </div>
+      </div>`;
+      document.getElementById('chat-log').appendChild(cardDiv);
+      document.getElementById('chat-log').scrollTop = document.getElementById('chat-log').scrollHeight;
+      updateSidebar();
+      const nq = qNum+1;
+      if(nq>=10){ setTimeout(()=>showFinale(), 3800); }
+      else { setTimeout(()=>{ qNum=nq; updateSidebar(); genQuestion(nq); }, 4200); }
+    } else {
+      Sound.wrong();
+      appendLog(`<div class="entry-fail">
+        <div class="sm" style="font-size:9px;color:#ef4444;margin-bottom:5px;letter-spacing:0.1em;">❌ WRONG — TRY AGAIN</div>
+        <p class="cp" style="font-size:15px;color:rgba(255,200,200,0.9);line-height:1.6;font-style:italic;">${esc(r.message)}</p>
+      </div>`);
+    }
+  }
+  setLoadingUI(false);
+}
+
+async function getHint(){
+  if(hintUsed||!clue||loading)return;
+  setLoadingUI(true);
+  try{
+    const raw=await callAI([{role:'user',content:
+      `Give ONE cryptic hint for this SQL puzzle WITHOUT revealing the answer:
+PUZZLE: "${clue.clue}"
+ANSWER: "${clue.answer}"
+Hint: nudge toward the SQL concept — mention category, starting letter, or related concept. One sentence only.
+Return ONLY: {"hint":"the hint"}`
+    }],'SQL hint giver. One cryptic sentence. JSON only.',400);
+    const r=exJSON(raw);
+    Sound.hint();
+    appendLog(`<div class="entry-hint">
+      <div class="sm" style="font-size:9px;color:var(--gold);margin-bottom:5px;letter-spacing:0.15em;">💡 HINT FROM THE VAULT</div>
+      <p class="cp" style="font-size:14px;color:rgba(245,200,130,0.9);font-style:italic;">${esc(r.hint)}</p>
+    </div>`);
+    hintUsed=true;
+    document.getElementById('hint-btn').textContent='💡 HINT USED';
+    document.getElementById('hint-btn').disabled=true;
+  }catch{
+    appendLog(`<div class="entry-hint"><p class="cp" style="font-size:14px;color:rgba(245,200,130,0.9);font-style:italic;">The answer involves a core SQL keyword or clause...</p></div>`);
+    hintUsed=true;
+    document.getElementById('hint-btn').textContent='💡 HINT USED';
+    document.getElementById('hint-btn').disabled=true;
+  }
+  setLoadingUI(false);
+}
+
+async function toggleMic(){
+  if(listening){rec?.stop();setListening(false);return;}
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({audio:true});
+    s.getTracks().forEach(t=>t.stop());
+    document.getElementById('answer-input').value='';
+    document.getElementById('mic-err').style.display='none';
+    rec?.start();setListening(true);
+  }catch{
+    const me=document.getElementById('mic-err');
+    me.textContent='⚠ Mic blocked — allow microphone access and try again.';
+    me.style.display='block';
+  }
+}
+
+// ─── Fireworks engine ───────────────────────────────────────────────────
+const Fireworks = (function(){
+  let canvas, ctx, particles = [], rafId = null, running = false;
+  const COLORS = ['#ffd700','#ff8800','#ff5b1a','#ff3030','#ffe066','#fff0aa','#ffaa00','#ff4488','#aaffaa','#88ddff'];
+  function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  function explode(x, y, count=80, baseColor=null){
+    const color = baseColor || COLORS[Math.floor(Math.random()*COLORS.length)];
+    for(let i=0;i<count;i++){
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 7;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle)*speed,
+        vy: Math.sin(angle)*speed,
+        life: 1,
+        decay: 0.012 + Math.random()*0.012,
+        size: 2 + Math.random()*3,
+        color,
+        gravity: 0.05,
+        trail: []
+      });
+    }
+  }
+  function loop(){
+    if(!running) return;
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    for(let i = particles.length - 1; i >= 0; i--){
+      const p = particles[i];
+      p.trail.push({x:p.x, y:p.y});
+      if(p.trail.length > 5) p.trail.shift();
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += p.gravity;
+      p.vx *= 0.99;
+      p.life -= p.decay;
+      // Trail
+      for(let t=0;t<p.trail.length;t++){
+        const tp = p.trail[t];
+        const a = (t/p.trail.length) * p.life * 0.6;
+        ctx.beginPath();
+        ctx.arc(tp.x, tp.y, p.size * (t/p.trail.length), 0, Math.PI*2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = a;
+        ctx.fill();
+      }
+      // Head
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.life;
+      ctx.fill();
+      // Glow
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size*3, 0, Math.PI*2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.life * 0.15;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      if(p.life <= 0) particles.splice(i,1);
+    }
+    rafId = requestAnimationFrame(loop);
+  }
+  return {
+    start(){
+      canvas = document.getElementById('fireworks-canvas');
+      if(!canvas) return;
+      ctx = canvas.getContext('2d');
+      canvas.classList.add('show');
+      resize();
+      window.addEventListener('resize', resize);
+      running = true;
+      // Schedule fireworks
+      const launchOne = () => {
+        if(!running) return;
+        const x = canvas.width * (0.15 + Math.random()*0.7);
+        const y = canvas.height * (0.18 + Math.random()*0.45);
+        explode(x, y, 70 + Math.floor(Math.random()*60));
+        if(Math.random() < 0.4){
+          // Double-burst
+          setTimeout(()=>explode(
+            x + (Math.random()-0.5)*200,
+            y + (Math.random()-0.5)*100,
+            50 + Math.floor(Math.random()*40)
+          ), 250);
+        }
+      };
+      // Initial burst
+      for(let i=0;i<3;i++) setTimeout(launchOne, i*220);
+      this._iv = setInterval(launchOne, 700);
+      loop();
+    },
+    stop(){
+      running = false;
+      if(this._iv) clearInterval(this._iv);
+      if(rafId) cancelAnimationFrame(rafId);
+      particles = [];
+      if(canvas){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        canvas.classList.remove('show');
+      }
+    },
+    burst(x, y, count, color){ explode(x, y, count, color); }
+  };
+})();
+
+// ─── Confetti rain (gold + jewel emojis) ────────────────────────────────
+function spawnConfetti(durationMs = 8000, density = 80){
+  const cont = document.getElementById('particles');
+  const icons = ["💰","💎","👑","✨","🪙","💍","🏆","⭐","🌟","💫","🔮","🥇","🌠"];
+  const launch = () => {
+    for(let i=0;i<3;i++){
+      const el = document.createElement('div');
+      el.className = 'gold-part';
+      el.textContent = icons[Math.floor(Math.random()*icons.length)];
+      el.style.left = Math.random()*100 + '%';
+      el.style.top = '-30px';
+      el.style.fontSize = (1.0 + Math.random()*1.6) + 'rem';
+      el.style.animationDuration = (2.5 + Math.random()*3) + 's';
+      cont.appendChild(el);
+      setTimeout(()=>el.remove(), 6000);
+    }
+  };
+  const start = Date.now();
+  const iv = setInterval(()=>{
+    if(Date.now() - start > durationMs){ clearInterval(iv); return; }
+    launch();
+  }, 1000 / (density/15));
+}
+
+// ─── Finale ─────────────────────────────────────────────────────────────
+function showFinale(){
+  // Clear backend save — game complete
+  if (window.GAL_CLEAR_GAME) window.GAL_CLEAR_GAME('treasure');
+  Sound.stopMusic();
+
+  const f = document.getElementById('finale');
+  f.style.background = '#000';
+  f.style.transition = 'background 1.2s';
+  f.className = 'active';
+
+  // Save stats so the GAL dashboard picks them up on next focus
+  try {
+    const xpEarned = score * 100 + (score === 10 ? 500 : 0);
+    const prev = JSON.parse(localStorage.getItem('gal_pending_stats') || '{}');
+    localStorage.setItem('gal_pending_stats', JSON.stringify({
+      score:         (prev.score || 0) + xpEarned,
+      xp_earned:     (prev.xp_earned || 0) + xpEarned,
+      rooms_cleared: (prev.rooms_cleared || 0) + score,
+      accuracy:      Math.round(score / 10 * 100),
+      hints_used:    prev.hints_used || 0,
+      best_combo:    prev.best_combo || 1,
+      difficulty:    'treasure',
+      activity_msg:  `Treasure Hunt: ${score}/10 stages cleared (+${xpEarned} XP)`
+    }));
+  } catch {}
+
+  // === PHASE 0: Vault doors swing open ===
+  Sound.vault();
+  const p0 = document.getElementById('finale-phase0');
+  p0.style.display = 'block';
+  p0.innerHTML = `
+    <div class="anim-fadein" style="text-align:center;">
+      <div class="vault-doors">
+        <div class="vault-door left">🔒</div>
+        <div class="vault-door right">🗝️</div>
+        <div class="vault-glow">💎</div>
+      </div>
+      <div class="fd shimmer-text" style="font-size:24px;margin-top:32px;letter-spacing:0.18em;color:#ffd700;">
+        OPENING THE TREASURE VAULT...
+      </div>
+    </div>`;
+
+  // Trigger screen flash mid-door-swing
+  setTimeout(()=>{
+    document.getElementById('screen-flash').classList.add('flash');
+    setTimeout(()=>document.getElementById('screen-flash').classList.remove('flash'), 700);
+  }, 1800);
+
+  // === PHASE 1: Treasure reveal — fireworks + light beams + confetti ===
+  setTimeout(()=>{
+    f.style.background = 'radial-gradient(ellipse at center,#3a1d05 0%,#1a0a02 50%,#000 100%)';
+    p0.style.display = 'none';
+
+    // Trigger spectacle
+    document.getElementById('light-beams').classList.add('show');
+    Fireworks.start();
+    spawnConfetti(12000);
+    Sound.fanfare();
+    setTimeout(()=>Sound.coin(), 400);
+    setTimeout(()=>Sound.correct(), 900);
+
+    const p1 = document.getElementById('finale-phase1');
+    p1.style.display = 'block';
+    p1.innerHTML = `
+      <div class="anim-fadein" style="text-align:center;padding:24px;">
+        <div class="treasure-chest">🎁</div>
+        <div class="floating-row">
+          ${["👑","💰","🪙","💍","🏆","🌟","💎","🔮"].map((e,i)=>
+            `<div class="anim-float" style="font-size:36px;animation-delay:${i*0.15}s;filter:drop-shadow(0 0 12px rgba(255,200,60,0.7));">${e}</div>`
+          ).join('')}
+        </div>
+        <div class="victory-title">YOU FOUND THE TREASURE!</div>
+        <div class="cp" style="font-size:17px;color:rgba(255,220,150,0.9);margin-top:14px;font-style:italic;max-width:480px;margin:14px auto 0;line-height:1.55;">
+          The vault overflows with gold, diamonds, pearls, and relics of the ancient realm...
+        </div>
+      </div>`;
+
+    // === PHASE 2: Final scoreboard with stats ===
+    setTimeout(()=>{
+      p1.style.display = 'none';
+      const rankMsg =
+        score === 10 ? '💎 PERFECT — SQL GRANDMASTER!' :
+        score >= 7 ? '⭐ SEASONED SQL EXPLORER' :
+        score >= 5 ? '💪 WORTHY ADVENTURER' :
+        '🔄 APPRENTICE — TRAIN MORE';
+      const xpEarned = score * 100 + (score === 10 ? 500 : 0);
+      const accuracy = Math.round(score / 10 * 100);
+
+      const p2 = document.getElementById('finale-phase2');
+      p2.style.display = 'block';
+      p2.innerHTML = `
+        <div class="anim-stamp" style="text-align:center;padding:30px 24px;max-width:560px;">
+          <div class="crown-rise">👑</div>
+          <div class="victory-badge" style="margin-top:10px;">VICTORY</div>
+          <div class="victory-title" style="font-size:42px;">EXPEDITION COMPLETE</div>
+
+          <div class="score-box">
+            <div class="sm" style="font-size:10px;color:rgba(212,175,55,0.6);letter-spacing:0.28em;margin-bottom:8px;">FINAL SCORE</div>
+            <div class="fd" style="font-size:78px;font-weight:900;color:#ffd700;line-height:1;text-shadow:0 0 30px rgba(255,200,60,0.5);">
+              ${score}<span style="font-size:38px;color:rgba(255,220,150,0.45);">/10</span>
+            </div>
+            <div class="cp" style="font-size:17px;color:rgba(255,220,150,0.95);margin-top:12px;font-style:italic;font-weight:700;">${rankMsg}</div>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-tile">
+              <div class="stat-tile-num">+${xpEarned}</div>
+              <div class="stat-tile-lbl">XP EARNED</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-tile-num">${accuracy}%</div>
+              <div class="stat-tile-lbl">ACCURACY</div>
+            </div>
+            <div class="stat-tile">
+              <div class="stat-tile-num">${score}/10</div>
+              <div class="stat-tile-lbl">CHAMBERS</div>
+            </div>
+          </div>
+
+          <div class="victory-actions">
+            <button class="victory-btn" onclick="resetGame()">🗝️ NEW EXPEDITION</button>
+            <button class="victory-btn ghost" onclick="window.location.href='dashboard.html'">‹ DASHBOARD</button>
+          </div>
+          <div class="sm" id="countdown-txt" style="font-size:10px;color:rgba(212,175,55,0.45);letter-spacing:0.18em;margin-top:14px;">Auto-return in 30s...</div>
+        </div>`;
+
+      // Extra firework burst on the trophy
+      setTimeout(()=>{
+        const cw = window.innerWidth, ch = window.innerHeight;
+        Fireworks.burst(cw*0.3, ch*0.3, 100, '#ffd700');
+        Fireworks.burst(cw*0.7, ch*0.3, 100, '#ff8800');
+      }, 400);
+
+      let cd = 30;
+      if(window._galCountdownIv) clearInterval(window._galCountdownIv);
+      window._galCountdownIv = setInterval(()=>{
+        cd--;
+        const ct = document.getElementById('countdown-txt');
+        if(ct) ct.textContent = `Auto-return in ${cd}s...`;
+        if(cd <= 0){ clearInterval(window._galCountdownIv); resetGame(); }
+      }, 1000);
+    }, 5500);
+  }, 2400);
+}
+
+function resetGame(){
+  if(window._galCountdownIv) clearInterval(window._galCountdownIv);
+  Fireworks.stop();
+  document.getElementById('light-beams').classList.remove('show');
+  document.getElementById('finale').className='';
+  document.getElementById('finale-phase0').style.display='none';
+  document.getElementById('finale-phase1').style.display='none';
+  document.getElementById('finale-phase2').style.display='none';
+  document.getElementById('particles').innerHTML='';
+  document.getElementById('score-display').style.display='none';
+  document.getElementById('start-btn').disabled=false;
+  document.getElementById('start-btn').innerHTML='<span style="font-size:20px;">🗝️</span> BEGIN THE HUNT <span style="font-size:20px;">🏰</span>';
+  document.getElementById('start-btn').className='anim-glow';
+  qNum=0;score=0;clue=null;hintUsed=false;placeUnlocked=false;loading=false;
+  showScreen('intro');
+}
+
+// ─── Utility ─────────────────────────────────────────────────────────────
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Input listeners
+document.getElementById('answer-input').addEventListener('input',function(){
+  Sound.type();
+  document.getElementById('submit-btn').disabled=loading||!this.value.trim()||placeUnlocked;
+});
+
+// Boot
+init();
+
+// Mute button wiring
+(function setupMute(){
+  const btn = document.getElementById('mute-btn');
+  if(!btn) return;
+  function refresh(){
+    const m = Sound.isMuted();
+    btn.textContent = m ? '🔇' : '🔊';
+    btn.style.color = m ? 'rgba(212,175,55,0.4)' : '#d4af37';
+    btn.style.borderColor = m ? 'rgba(212,175,55,0.15)' : 'rgba(212,175,55,0.5)';
+  }
+  refresh();
+  btn.addEventListener('click', () => {
+    Sound.init();
+    Sound.setMuted(!Sound.isMuted());
+    refresh();
+    if(!Sound.isMuted()) Sound.click();
+  });
+})();
+
+// ─── BACKEND SYNC: resume saved game on load ────────────────────────────
+(async function attemptResume(){
+  if (!window.GAL_LOAD_GAME) return;
+  const saved = await window.GAL_LOAD_GAME('treasure');
+  if (!saved || saved.qNum >= 10 || saved.qNum === undefined) return;
+  // Show resume prompt
+  const banner = document.createElement('div');
+  banner.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:1000;background:rgba(212,175,55,0.95);color:#0a0602;padding:14px 22px;font-family:Space Mono,monospace;font-size:12px;letter-spacing:.1em;display:flex;gap:14px;align-items:center;box-shadow:0 8px 30px rgba(0,0,0,0.5);';
+  banner.innerHTML = `
+    <span><b>Resume your hunt?</b> Stage ${saved.qNum + 1}/10, ${saved.score} solved</span>
+    <button onclick="window._galResume()" style="background:#0a0602;color:#d4af37;border:none;padding:6px 14px;font-family:inherit;font-size:11px;cursor:pointer;">▶ RESUME</button>
+    <button onclick="this.parentElement.remove()" style="background:transparent;color:#0a0602;border:1px solid #0a0602;padding:6px 14px;font-family:inherit;font-size:11px;cursor:pointer;">✕ NEW</button>`;
+  document.body.appendChild(banner);
+  window._galResume = () => {
+    qNum = saved.qNum; score = saved.score;
+    banner.remove();
+    showScreen('playing');
+    document.getElementById('score-display').style.display = 'flex';
+    updateSidebar();
+    appendLog(`<div class="entry-system"><span class="sm" style="font-size:10px;color:rgba(212,175,55,0.55);letter-spacing:0.08em;">⏯  Resuming from Stage ${qNum+1}/10 (${score} solved)</span></div>`);
+    genQuestion(qNum);
+  };
+})();
+
+// Auto-save progress whenever it advances meaningfully
+(function setupAutosave(){
+  if (!window.GAL_SAVE_GAME) return;
+  setInterval(() => {
+    if (qNum > 0 && qNum < 10) {
+      window.GAL_SAVE_GAME('treasure', { qNum, score, ts: Date.now() });
+    }
+  }, (window.GAL_CONFIG && window.GAL_CONFIG.AUTOSAVE_INTERVAL_MS) || 12000);
+})();
+</script>
+</body>
+</html>

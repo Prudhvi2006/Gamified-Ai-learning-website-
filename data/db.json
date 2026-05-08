@@ -1,0 +1,368 @@
+{
+  "users": {
+    "pardhupavan457@gmail.com": {
+      "uid": "u_734f6327076a14b0",
+      "name": "pardhu pavan",
+      "email": "pardhupavan457@gmail.com",
+      "hash": "6bd03056208f08b83b8acff7a73b2681390e06b45771743e001f4bc4f530d73f",
+      "class_name": "Btech",
+      "grade": "3",
+      "joined": 1777657765,
+      "xp": 1550,
+      "level": 1,
+      "streak": 3,
+      "last_active": 1778227617,
+      "rooms_cleared": 0,
+      "missions_done": 0,
+      "score": 400,
+      "accuracy": 100.0,
+      "hints_used": 0,
+      "best_combo": 1,
+      "achievements": [],
+      "activity": [
+        {
+          "msg": "Daily login streak: 3 days \ud83d\udd25",
+          "xp": 0,
+          "ts": 1778213413,
+          "diff": "system"
+        },
+        {
+          "msg": "Daily login streak: 2 days \ud83d\udd25",
+          "xp": 0,
+          "ts": 1778128310,
+          "diff": "system"
+        },
+        {
+          "msg": "Code RED Level 1 \u2014 In Progress +400 XP",
+          "xp": 400,
+          "ts": 1778065761,
+          "diff": "code_red"
+        },
+        {
+          "msg": "Code RED Level 1 \u2014 In Progress +400 XP",
+          "xp": 400,
+          "ts": 1778056569,
+          "diff": "code_red"
+        },
+        {
+          "msg": "Study Module Complete: Python Basics \ud83d\udcda +500 XP",
+          "xp": 500,
+          "ts": 1778042030,
+          "diff": "study"
+        },
+        {
+          "msg": "Daily login streak: 1 days \ud83d\udd25",
+          "xp": 0,
+          "ts": 1778041412,
+          "diff": "system"
+        },
+        {
+          "msg": "Daily login streak: 3 days \ud83d\udd25",
+          "xp": 0,
+          "ts": 1777792068,
+          "diff": "system"
+        },
+        {
+          "msg": "Daily login streak: 2 days \ud83d\udd25",
+          "xp": 0,
+          "ts": 1777713892,
+          "diff": "system"
+        },
+        {
+          "msg": "Account created \u2014 Welcome to GAL! \ud83d\ude80",
+          "xp": 250,
+          "ts": 1777657765,
+          "diff": "system"
+        }
+      ],
+      "streak_days": [
+        "2026-05-01",
+        "2026-05-02",
+        "2026-05-03",
+        "2026-05-06",
+        "2026-05-07",
+        "2026-05-08"
+      ],
+      "study_modules_done": [
+        "sm_python_basics"
+      ],
+      "team_id": "C0F2CB"
+    },
+    "pardhupavan456@gmail.com": {
+      "uid": "u_b11de29a2225cbcb",
+      "name": "MEDISETTI PRUDHVI",
+      "email": "pardhupavan456@gmail.com",
+      "hash": "6bd03056208f08b83b8acff7a73b2681390e06b45771743e001f4bc4f530d73f",
+      "class_name": "Btech",
+      "grade": "3",
+      "joined": 1777658695,
+      "xp": 250,
+      "level": 1,
+      "streak": 1,
+      "last_active": 1777658695,
+      "rooms_cleared": 0,
+      "missions_done": 0,
+      "score": 0,
+      "accuracy": 0,
+      "hints_used": 0,
+      "best_combo": 1,
+      "achievements": [],
+      "activity": [
+        {
+          "msg": "Account created \u2014 Welcome to GAL! \ud83d\ude80",
+          "xp": 250,
+          "ts": 1777658695,
+          "diff": "system"
+        }
+      ],
+      "streak_days": [
+        "2026-05-01"
+      ]
+    },
+    "satwikmushini1@gmail.com": {
+      "uid": "u_8b8281b805b5a7b3",
+      "name": "satwik",
+      "email": "satwikmushini1@gmail.com",
+      "hash": "aeb0700cec7bedbf7c5a14f7669a15dcc6f19b5be9e316ebbd685938b01b6f98",
+      "class_name": "Btech",
+      "grade": "3",
+      "joined": 1778056984,
+      "xp": 250,
+      "level": 1,
+      "streak": 1,
+      "last_active": 1778056984,
+      "rooms_cleared": 0,
+      "missions_done": 0,
+      "score": 0,
+      "accuracy": 0,
+      "hints_used": 0,
+      "best_combo": 1,
+      "achievements": [],
+      "activity": [
+        {
+          "msg": "Account created \u2014 Welcome to GAL! \ud83d\ude80",
+          "xp": 250,
+          "ts": 1778056984,
+          "diff": "system"
+        }
+      ],
+      "streak_days": [
+        "2026-05-06"
+      ],
+      "study_modules_done": [],
+      "team_id": null,
+      "game_progress": {
+        "haunted_mansion": {
+          "levels_done": [],
+          "unlocked": true
+        },
+        "code_red": {
+          "levels_done": [],
+          "unlocked": false
+        },
+        "ai_labyrinth": {
+          "levels_done": [],
+          "unlocked": false
+        }
+      }
+    }
+  },
+  "sessions": {
+    "47dce2ff3407dd80f6348d7bd11d2e709a808c6517bf9150": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1777657765
+    },
+    "c13ba75b7690cde2981075c85fd6686a591f986d9964a1d8": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1777658255
+    },
+    "b6e852fb18f81eea3f175e5e576b8f0351b4e59ff6d14ded": {
+      "email": "pardhupavan456@gmail.com",
+      "ts": 1777658695
+    },
+    "8d4ad6040dfe0ecdda6dcbb696767ea2949345f43512f198": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1777658742
+    },
+    "f474b2f79d245f26abeb6bb4d8bdd51eba19e52bb197f637": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1777659926
+    },
+    "6a3c1aaa32029636af5bea0f3cd168e82c4f5c75000f4a45": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1777713892
+    },
+    "44f6d97d9167331ae487a2c1c40057926f46f2187da146ce": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1777792068
+    },
+    "98c2f937eeef4e782836fcffc8e0aa304f5ec03743951b77": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778041412
+    },
+    "1f86eeeade09331add91b194f60d9d09513cb862182f909f": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778041772
+    },
+    "c632e1bee63b6fdfba7207732a46c137a0a0a822fca9f5d4": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778049917
+    },
+    "16f6f0e0ad7b7eb475159cf7cc077cd49f606c85a61a77e3": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778054853
+    },
+    "96c2233e3a68f95380dff131a80d2e12469aa9671616773fc89b156f6e313355": {
+      "email": "satwikmushini1@gmail.com",
+      "ts": 1778056984
+    },
+    "e3cf40d568581d9ccc9aafda40f29fa496cd1267a5445a4b67570ee6facd6071": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778059240
+    },
+    "3673494a49b12f9e23192561af7980012f243d9bdf0562fd9260cf650289d4f0": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778062082
+    },
+    "b19621a3ea2f92473853639d37095aab58ce00140c5d4e3e7339c3ecc788910d": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778065739
+    },
+    "2eb8bb3faba00b679f6b4c8b5c417981c3c4d84aae1ce71479411c4882bbf355": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778128310
+    },
+    "105b8ac0b5ffd378435f8348201d94c240f71da15cf0515e71850b04713efa78": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778166735
+    },
+    "8e57f897c8a9fa5bc05f1fea3c32b223d14c01c355fc87d73afad6d3beca5a78": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778171849
+    },
+    "80ac8781314823b52f0a5dea23ba302016919b761f46cae6173990baee189469": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778171875
+    },
+    "7fb3dd78eb8b3728bc7bf7ef88e9b03e6044646fa23859af22a5d918f2d0fd48": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778175989
+    },
+    "df9d7fa9d1c3aa53aa71aff4db5b26a6cee845ab7ceee55d2b0d84653432e8ab": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778176095
+    },
+    "de204f6fd79849630fb6806b2468d245d28d7e5ca67a86425c6d472250396a4c": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778176493
+    },
+    "bd16a8cbbb37abc7a164c6b8acb7f01aa87e9cdca28fba939b05b3dc7ffcd444": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778213413
+    },
+    "31d9bd90ba66aa30f85aed7e1dd5f9aa0d37d2768d7e537888e002f255a773d7": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778214829
+    },
+    "a939dd70fbc6e25f195481e7f60cb8d3b38e7cb87ad4c7c148a872f87aacaf4a": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778215440
+    },
+    "67f097d3da65dbb4364a422dfd8c0188e9674650f7e9bd9eeb1946d1d46951dd": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778217934
+    },
+    "37c3fc86cb9a34a985672e8687f045b06f774dedaf7b827434ee9c94d5c42c43": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778219716
+    },
+    "96f5bba9949d626bef1af75539fd0efed2cad941ccf2982488c232fb42d516e2": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778220116
+    },
+    "166f4c014cfde7008cd1bb568309a98f5c29538117fe9947370d89c18ffe52e2": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778220263
+    },
+    "bf6157fd582079de124068cd8e64731305d4e273e319a7742806ea7dc1318dba": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778220387
+    },
+    "be1a79976ed48334081410f534c03579f3a2ec40852d74be742c8446f9fa1882": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778220804
+    },
+    "fd12bcc52482b12a5085fdcfc5a43587500286c1784a31009453131180bd4c38": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778220829
+    },
+    "9bb4950f23eb8c56db5f138e628ae4299ba85b300df074ef633d5f2767768dd0": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778220844
+    },
+    "ecc5487965e61f7254607f5add17e51bc10ee33d5fe73ba9f52cbafa3aad5cd9": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778227617
+    }
+  },
+  "leaderboard": [
+    {
+      "uid": "u_734f6327076a14b0",
+      "name": "pardhu pavan",
+      "score": 400,
+      "xp": 1550,
+      "level": 1,
+      "difficulty": "code_red",
+      "rooms": 0,
+      "date": "2026-05-06"
+    }
+  ],
+  "teams": {
+    "E6119A": {
+      "code": "E6119A",
+      "name": "rewasdfgh",
+      "owner": "u_734f6327076a14b0",
+      "members": [
+        {
+          "uid": "u_734f6327076a14b0",
+          "name": "pardhu pavan",
+          "score": 0,
+          "level": 1
+        }
+      ],
+      "created": 1778042057,
+      "score": 0,
+      "game_session": null
+    },
+    "998518": {
+      "code": "998518",
+      "name": "rewasdfgh",
+      "owner": "u_734f6327076a14b0",
+      "members": [
+        {
+          "uid": "u_734f6327076a14b0",
+          "name": "pardhu pavan",
+          "score": 0,
+          "level": 1
+        }
+      ],
+      "created": 1778056361,
+      "score": 0
+    },
+    "C0F2CB": {
+      "code": "C0F2CB",
+      "name": "ro45",
+      "owner": "u_734f6327076a14b0",
+      "members": [
+        {
+          "uid": "u_734f6327076a14b0",
+          "name": "pardhu pavan",
+          "score": 400,
+          "level": 1
+        }
+      ],
+      "created": 1778176248,
+      "score": 400
+    }
+  }
+}
