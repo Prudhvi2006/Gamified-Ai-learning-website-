@@ -99,7 +99,7 @@
       "xp": 250,
       "level": 1,
       "streak": 1,
-      "last_active": 1777658695,
+      "last_active": 1778533993,
       "rooms_cleared": 0,
       "missions_done": 0,
       "score": 0,
@@ -109,6 +109,12 @@
       "achievements": [],
       "activity": [
         {
+          "msg": "Daily login streak: 1 days \ud83d\udd25",
+          "xp": 0,
+          "ts": 1778533302,
+          "diff": "system"
+        },
+        {
           "msg": "Account created \u2014 Welcome to GAL! \ud83d\ude80",
           "xp": 250,
           "ts": 1777658695,
@@ -116,7 +122,8 @@
         }
       ],
       "streak_days": [
-        "2026-05-01"
+        "2026-05-01",
+        "2026-05-12"
       ]
     },
     "satwikmushini1@gmail.com": {
@@ -148,6 +155,100 @@
       ],
       "streak_days": [
         "2026-05-06"
+      ],
+      "study_modules_done": [],
+      "team_id": null,
+      "game_progress": {
+        "haunted_mansion": {
+          "levels_done": [],
+          "unlocked": true
+        },
+        "code_red": {
+          "levels_done": [],
+          "unlocked": false
+        },
+        "ai_labyrinth": {
+          "levels_done": [],
+          "unlocked": false
+        }
+      }
+    },
+    "aravasatyasumanth@gmail.com": {
+      "uid": "u_51d90d581c5caab9",
+      "name": "Satya Sumanth",
+      "email": "aravasatyasumanth@gmail.com",
+      "hash": "05422287a36afaf441558baa88613a421fd5ee82a759c347f41e4878f5c53e68",
+      "class_name": "B.Tech",
+      "grade": "9.0",
+      "joined": 1778308341,
+      "xp": 250,
+      "level": 1,
+      "streak": 1,
+      "last_active": 1778308779,
+      "rooms_cleared": 0,
+      "missions_done": 0,
+      "score": 0,
+      "accuracy": 0,
+      "hints_used": 0,
+      "best_combo": 1,
+      "achievements": [],
+      "activity": [
+        {
+          "msg": "Account created \u2014 Welcome to GAL! \ud83d\ude80",
+          "xp": 250,
+          "ts": 1778308341,
+          "diff": "system"
+        }
+      ],
+      "streak_days": [
+        "2026-05-09"
+      ],
+      "study_modules_done": [],
+      "team_id": null,
+      "game_progress": {
+        "haunted_mansion": {
+          "levels_done": [],
+          "unlocked": true
+        },
+        "code_red": {
+          "levels_done": [],
+          "unlocked": false
+        },
+        "ai_labyrinth": {
+          "levels_done": [],
+          "unlocked": false
+        }
+      }
+    },
+    "satwikmushini@gmail.com": {
+      "uid": "u_46899123546223de",
+      "name": "Satwik Mushini",
+      "email": "satwikmushini@gmail.com",
+      "hash": "6bd03056208f08b83b8acff7a73b2681390e06b45771743e001f4bc4f530d73f",
+      "class_name": "btech",
+      "grade": "3",
+      "joined": 1778308922,
+      "xp": 250,
+      "level": 1,
+      "streak": 1,
+      "last_active": 1778308922,
+      "rooms_cleared": 0,
+      "missions_done": 0,
+      "score": 0,
+      "accuracy": 0,
+      "hints_used": 0,
+      "best_combo": 1,
+      "achievements": [],
+      "activity": [
+        {
+          "msg": "Account created \u2014 Welcome to GAL! \ud83d\ude80",
+          "xp": 250,
+          "ts": 1778308922,
+          "diff": "system"
+        }
+      ],
+      "streak_days": [
+        "2026-05-09"
       ],
       "study_modules_done": [],
       "team_id": null,
@@ -303,6 +404,26 @@
     "ecc5487965e61f7254607f5add17e51bc10ee33d5fe73ba9f52cbafa3aad5cd9": {
       "email": "pardhupavan457@gmail.com",
       "ts": 1778227617
+    },
+    "73f11789ab806fa7f9b2a4edafbcbe6e0ee44dcbb2740add743b851d910157ad": {
+      "email": "aravasatyasumanth@gmail.com",
+      "ts": 1778308341
+    },
+    "63efd70aca9483471108e135e82788c2ae83ad4a3cb32ddd121cee59934f83b8": {
+      "email": "aravasatyasumanth@gmail.com",
+      "ts": 1778308778
+    },
+    "dca4401e98794c028e721e90aecb4a5af766e18bca796f808aec367444e7e500": {
+      "email": "satwikmushini@gmail.com",
+      "ts": 1778308922
+    },
+    "468b9275d7df16c04df801cea9d60c12d115dea811d9bc1547122e25c09184a5": {
+      "email": "pardhupavan456@gmail.com",
+      "ts": 1778533302
+    },
+    "200ae2bf31a1afc2a3e25b7a895552286d9686c30955e98ddca508fcb8bd7a23": {
+      "email": "pardhupavan456@gmail.com",
+      "ts": 1778533993
     }
   },
   "leaderboard": [
