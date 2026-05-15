@@ -35,13 +35,13 @@ DB_PATH  = os.path.join(BASE_DIR, 'data', 'db.json')
 # ── Environment variables ───────────────────────────────────────────
 MONGODB_URI    = os.environ.get('MONGODB_URI', '').strip()
 MONGODB_DB     = os.environ.get('MONGODB_DB', 'gal')
-GEMINI_API_KEY = os.environ.get(
-    'GEMINI_API_KEY',
-    'AIzaSyBcqfDyc5l1XWjCRp8u7w8oYdjyZx0rVtE'
+GROK_API_KEY = os.environ.get(
+    'GROK_API_KEY',
+    'YOUR_GROQ_API_KEY'
 ).strip()
 # Fallback key — used automatically when primary key hits quota/rate-limit
-GEMINI_API_KEY_FALLBACK = os.environ.get(
-    'GEMINI_API_KEY_FALLBACK', ''
+GROK_API_KEY_FALLBACK = os.environ.get(
+    'GROK_API_KEY_FALLBACK', 'YOUR_GROQ_API_KEY'
 ).strip()
 
 # ── MongoDB client + collections ────────────────────────────────────

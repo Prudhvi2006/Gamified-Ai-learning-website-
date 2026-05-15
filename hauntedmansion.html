@@ -1913,29 +1913,17 @@ function onCorrect() {
    AI ORACLE
 ═══════════════════════════════════════════════════ */
 async function callAI(prompt, systemOverride) {
-  // Uses shared key from gal_config.js — paste your key there.
-  const GEMINI_KEY = (window.GAL_CONFIG && window.GAL_CONFIG.GEMINI_API_KEY) || 'YOUR_GEMINI_API_KEY_HERE';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${(window.GAL_CONFIG && window.GAL_CONFIG.GEMINI_MODEL) || 'gemini-2.5-flash'}:generateContent?key=${GEMINI_KEY}`;
-  
-  if (!GEMINI_KEY || GEMINI_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-    throw new Error('Set GEMINI_KEY in hauntedmansion.html');
-  }
-  
+  // Uses the universal AI endpoint from gal_config.js with automatic API key fallback
   const sys = systemOverride || 'You are the AI Oracle in Haunted Code Mansion. Be helpful but slightly eerie. Plain text only, no markdown.';
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system_instruction: { parts: [{ text: sys }] },
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { maxOutputTokens: 300, temperature: 0.8 }
-    })
-  });
-  const data = await res.json();
-  if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-    return data.candidates[0].content.parts[0].text.trim();
+  try {
+    const result = await window.callAI(prompt, [], sys);
+    if (result.ok && result.reply) {
+      return result.reply.trim();
+    }
+    throw new Error(result.msg || 'No response from AI');
+  } catch (err) {
+    throw new Error(err.message || 'AI service error');
   }
-  throw new Error(data.error?.message || 'No response from Gemini');
 }
 
 function updateHintCostUI() {

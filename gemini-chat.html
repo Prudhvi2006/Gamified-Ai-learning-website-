@@ -7,6 +7,9 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- GAL Config (provides callAI() function and auto-fallback) -->
+    <script src="gal_config.js"></script>
     
     <!-- Icons (Phosphor) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -107,7 +110,6 @@
     <script type="module">
         const App = function() {
             this.history = JSON.parse(localStorage.getItem('gemini_chat_history')) || [];
-            this.apiKey = "AIzaSyBcqfDyc5l1XWjCRp8u7w8oYdjyZx0rVtE"; // Connected Gemini API key
 
             this.init = () => {
                 this.renderHistory();
@@ -127,45 +129,18 @@
                 }
             };
 
-            this.callGemini = async (prompt) => {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey}`;
-                
-                // Keep history brief for speed
+            this.callAIWithFallback = async (prompt) => {
+                // Keep history brief for speed (last 6 messages)
                 const chatHistory = this.history.slice(-6).map(m => ({
-                    role: m.role === 'user' ? 'user' : 'model',
-                    parts: [{ text: m.text }]
+                    role: m.role === 'user' ? 'user' : 'assistant',
+                    content: m.text
                 }));
 
-                const payload = {
-                    contents: [...chatHistory, { role: "user", parts: [{ text: prompt }] }],
-                    systemInstruction: { 
-                        parts: [{ text: "You are a high-speed Gemini AI. OBJECTIVE: Reply in under 5 seconds. GUIDELINES: 1. Be concise. 2. Use Google Search ONLY for real-time data or facts you aren't sure of. 3. Prioritize speed. 4. Use markdown for clarity." }] 
-                    },
-                    tools: [{ "google_search": {} }],
-                    generationConfig: {
-                        temperature: 0.4,
-                        maxOutputTokens: 800
-                    }
-                };
-
-                for (let i = 0; i < 5; i++) {
-                    try {
-                        const response = await fetch(url, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        if (!response.ok) throw new Error('API Error');
-                        const data = await response.json();
-                        
-                        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                        return { text };
-                    } catch (e) {
-                        const delay = Math.pow(2, i) * 1000;
-                        await new Promise(res => setTimeout(res, delay));
-                    }
-                }
-                return { text: "Error: Request timeout." };
+                const systemPrompt = "You are a high-speed AI assistant. OBJECTIVE: Reply in under 5 seconds. GUIDELINES: 1. Be concise. 2. Prioritize speed. 3. Use markdown for clarity. 4. Keep responses under 800 words.";
+                
+                // Use the universal callAI function from gal_config.js
+                // It automatically handles API key fallback on the backend
+                return await callAI(prompt, chatHistory, systemPrompt);
             };
 
             this.handleChat = async () => {
@@ -182,12 +157,17 @@
                 const loader = this.showLoader();
 
                 try {
-                    const result = await this.callGemini(text);
+                    const result = await this.callAIWithFallback(text);
                     loader.remove();
-                    this.appendMessage('ai', result.text);
+                    
+                    if (result.ok && result.reply) {
+                        this.appendMessage('ai', result.reply);
+                    } else {
+                        this.appendMessage('ai', result.msg || "I couldn't process that. Please try again.");
+                    }
                 } catch (e) {
                     loader.remove();
-                    this.appendMessage('ai', "I couldn't process that quickly enough. Please retry.");
+                    this.appendMessage('ai', "Connection error. Please try again.");
                 } finally {
                     btn.disabled = false;
                 }

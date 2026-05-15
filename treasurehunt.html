@@ -758,61 +758,30 @@ function init(){
 }
 
 // ─── API ────────────────────────────────────────────────────────────────
-// Uses shared GEMINI key from gal_config.js — paste your key there.
-const GEMINI_KEY = (window.GAL_CONFIG && window.GAL_CONFIG.GEMINI_API_KEY) || 'AIzaSyBcqfDyc5l1XWjCRp8u7w8oYdjyZx0rVtE';
-const GEMINI_MODEL = (window.GAL_CONFIG && window.GAL_CONFIG.GEMINI_MODEL) || 'gemini-2.0-flash';
-const GEMINI_URLS = [
-  `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_KEY}`,
-  `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-];
+// Uses the universal AI endpoint from gal_config.js with automatic API key fallback
 
 async function callAI(messages, system, maxTokens=1200){
-  if (!GEMINI_KEY || GEMINI_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-    throw new Error('Set GEMINI_API_KEY in gal_config.js');
-  }
-  const contents = (messages || []).map(m => ({
-    role:  m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: String(m.content || '') }]
-  }));
-  const body = JSON.stringify({
-    system_instruction: { parts: [{ text: system || '' }] },
-    contents,
-    generationConfig: { maxOutputTokens: maxTokens, temperature: 0.8 }
-  });
-
-  let lastErr = null;
-  // Try each URL up to 2 times each
-  for (const url of GEMINI_URLS){
-    for (let attempt = 0; attempt < 2; attempt++){
-      try{
-        const ctrl = new AbortController();
-        const timer = setTimeout(()=>ctrl.abort(), 15000);
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body,
-          signal: ctrl.signal
-        });
-        clearTimeout(timer);
-        if(!res.ok){
-          const txt = await res.text().catch(()=>'');
-          lastErr = new Error('HTTP '+res.status+(txt?(': '+txt.slice(0,120)):''));
-          // Auth/quota errors won't be fixed by retry — break inner loop
-          if(res.status===400||res.status===401||res.status===403) break;
-          await new Promise(r=>setTimeout(r, 600*(attempt+1)));
-          continue;
-        }
-        const d = await res.json();
-        const text = d?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) return text;
-        lastErr = new Error(d?.error?.message || 'No candidates returned');
-      }catch(e){
-        lastErr = e;
-        await new Promise(r=>setTimeout(r, 500*(attempt+1)));
-      }
+  try {
+    // Convert message format to what our callAI expects
+    const messageHistory = (messages || []).map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: String(m.content || '')
+    }));
+    
+    // Use the universal callAI function which handles API key fallback automatically
+    const result = await window.callAI(
+      messageHistory.length > 0 ? messageHistory[messageHistory.length - 1].content : '',
+      messageHistory.slice(0, -1),
+      system || ''
+    );
+    
+    if (result.ok && result.reply) {
+      return result.reply;
     }
+    throw new Error(result.msg || 'AI call failed');
+  } catch (err) {
+    throw new Error(err.message || 'AI service error');
   }
-  throw lastErr || new Error('Gemini call failed');
 }
 
 function exJSON(t){

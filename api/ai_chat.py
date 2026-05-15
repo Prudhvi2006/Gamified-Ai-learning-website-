@@ -3,8 +3,7 @@ api/ai_chat.py
 ==============
 Blueprint: /api/ai_chat
 
-Proxies requests to Google Gemini API with:
-  - Automatic fallback to GEMINI_API_KEY_FALLBACK on quota/rate-limit errors
+Proxies requests to Groq API with:
   - Conversation history support (last 10 turns)
   - Clean error messages per HTTP status code
   - Works for both authenticated and guest users
@@ -15,14 +14,11 @@ import json as _json
 
 from flask import Blueprint, request, jsonify
 
-from core.config import GEMINI_API_KEY, GEMINI_API_KEY_FALLBACK
+from core.config import GROK_API_KEY, GROK_API_KEY_FALLBACK
 
 bp = Blueprint('ai_chat', __name__)
 
-_GEMINI_URL = (
-    'https://generativelanguage.googleapis.com/v1beta/'
-    'models/gemini-2.0-flash:generateContent?key={key}'
-)
+_GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
 _DEFAULT_SYSTEM = (
     "You are GAL's AI study assistant — a helpful, enthusiastic tutor for "
@@ -33,37 +29,37 @@ _DEFAULT_SYSTEM = (
 # ── Build list of available keys (primary first, fallback second) ────
 def _get_keys() -> list[str]:
     keys = []
-    if GEMINI_API_KEY:
-        keys.append(GEMINI_API_KEY)
-    if GEMINI_API_KEY_FALLBACK and GEMINI_API_KEY_FALLBACK != GEMINI_API_KEY:
-        keys.append(GEMINI_API_KEY_FALLBACK)
+    if GROK_API_KEY:
+        keys.append(GROK_API_KEY)
+    if GROK_API_KEY_FALLBACK and GROK_API_KEY_FALLBACK != GROK_API_KEY:
+        keys.append(GROK_API_KEY_FALLBACK)
     return keys
 
 
-def _call_gemini(api_key: str, payload: bytes) -> str:
+def _call_groq(api_key: str, payload: bytes) -> str:
     """
-    Make one Gemini API call with the given key.
+    Make one Groq API call with the given key.
     Returns the reply text on success.
     Raises urllib.error.HTTPError on API errors.
-    Raises ValueError if the response has no usable candidate.
+    Raises ValueError if the response has no usable choices.
     """
     req = _req.Request(
-        _GEMINI_URL.format(key=api_key),
+        _GROQ_URL,
         data=payload,
-        headers={'Content-Type': 'application/json'},
+        headers={
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {api_key}'
+        },
     )
     with _req.urlopen(req, timeout=30) as resp:
         result = _json.loads(resp.read().decode('utf-8'))
 
-    candidates = result.get('candidates', [])
-    if candidates and candidates[0].get('content'):
-        reply = ''.join(
-            part.get('text', '')
-            for part in candidates[0]['content'].get('parts', [])
-        )
-        if reply.strip():
-            return reply.strip()
-    raise ValueError('No usable response from Gemini')
+    choices = result.get('choices', [])
+    if choices and choices[0].get('message'):
+        reply = choices[0]['message'].get('content', '').strip()
+        if reply:
+            return reply
+    raise ValueError('No usable response from Groq')
 
 
 @bp.route('/api/ai_chat', methods=['POST'])
@@ -72,7 +68,7 @@ def ai_chat():
     if not keys:
         return jsonify({
             'ok':  False,
-            'msg': 'AI not configured. Add GEMINI_API_KEY to your .env file.',
+            'msg': 'AI not configured. Add GROK_API_KEY to your .env file.',
         }), 503
 
     data    = request.get_json(silent=True) or {}
@@ -99,27 +95,22 @@ def ai_chat():
 
     messages = clean_history + [{'role': 'user', 'content': message}]
 
-    # ── Build Gemini contents ─────────────────────────────────────
-    contents = [
-        {
-            'role':  'model' if m['role'] == 'assistant' else 'user',
-            'parts': [{'text': m['content']}],
-        }
-        for m in messages
-    ]
+    # ── Build Groq messages ─────────────────────────────────────
+    groq_messages = [{'role': 'system', 'content': system_msg}] + messages
 
     payload = _json.dumps({
-        'system_instruction': {'parts': [{'text': system_msg}]},
-        'contents':           contents,
-        'generationConfig':   {'maxOutputTokens': 800, 'temperature': 0.7},
+        'model': 'mixtral-8x7b-32768',
+        'messages': groq_messages,
+        'max_tokens': 800,
+        'temperature': 0.7,
     }).encode('utf-8')
 
-    # ── Try each key in order ─────────────────────────────────────
+    # ── Try each key in order (primary first, fallback second) ────
     last_error = ''
     for idx, key in enumerate(keys):
         key_label = 'PRIMARY' if idx == 0 else 'FALLBACK'
         try:
-            reply = _call_gemini(key, payload)
+            reply = _call_groq(key, payload)
             if idx > 0:
                 print(f'[ai_chat] Used {key_label} key successfully after primary failed')
             return jsonify({'ok': True, 'reply': reply})
@@ -128,7 +119,7 @@ def ai_chat():
             err = str(exc)
             last_error = err
             is_quota   = any(x in err for x in ('429', 'RESOURCE_EXHAUSTED', 'quota'))
-            is_invalid = any(x in err for x in ('400', 'INVALID_ARGUMENT', 'API_KEY'))
+            is_invalid = any(x in err for x in ('400', 'INVALID_ARGUMENT', 'API_KEY', '401'))
 
             if is_quota:
                 print(f'[ai_chat] {key_label} key quota exhausted — trying next key...')
@@ -147,13 +138,13 @@ def ai_chat():
         return jsonify({
             'ok':  False,
             'msg': (
-                'Both API keys have hit their free-tier quota. '
-                'Please get a new key at https://aistudio.google.com/apikey '
-                'and add it as GEMINI_API_KEY in your .env file, then restart.'
+                'Both API keys have hit their quota limit. '
+                'Please get a new key at https://console.groq.com/keys '
+                'and add it as GROK_API_KEY_FALLBACK in your .env file, then restart.'
             ),
         }), 429
 
     return jsonify({
         'ok':  False,
-        'msg': 'AI service unavailable. Check your GEMINI_API_KEY in .env.',
+        'msg': 'AI service unavailable. Check your GROK_API_KEY in .env.',
     }), 503

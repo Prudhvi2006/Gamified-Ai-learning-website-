@@ -96,7 +96,7 @@ def health():
         'ok':       True,
         'db':       'mongodb' if cfg.mongo_client else 'local_json',
         'firebase': cfg.fb_enabled,
-        'ai_chat':  bool(cfg.GEMINI_API_KEY),
+        'ai_chat':  bool(cfg.GROK_API_KEY),
         'ts':       int(time.time()),
         'version':  '3.1',
     })
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     print('=' * 60)
     print(f"  DB Mode  : {'MongoDB' if cfg.mongo_client else 'Local JSON (data/db.json)'}")
     print(f"  Firebase : {'Enabled' if cfg.fb_enabled else 'Disabled'}")
-    print(f"  AI Chat  : {'[ON]' if cfg.GEMINI_API_KEY else '[OFF] set GEMINI_API_KEY'}")
+    print(f"  AI Chat  : {'[ON]' if cfg.GROK_API_KEY else '[OFF] set GROK_API_KEY'}")
     print('=' * 60 + '\n')
 
     app.run(debug=True, port=5050, host='0.0.0.0')

@@ -980,33 +980,15 @@ let aiHistory   = [];
 let currentSection = 'overview';
 if (!token) window.location.href = '/';
 
-// ── GEMINI AI CONFIG (uses shared gal_config.js) ──────────────────
-//    Edit the key in gal_config.js — all pages auto-pick it up.
-const GEMINI_API_KEY = (window.GAL_CONFIG && window.GAL_CONFIG.GEMINI_API_KEY) || 'AIzaSyAD3-6O7f25ZC56Crk77DxvhGRqAIVgAEI';
-const GEMINI_URL     = `https://generativelanguage.googleapis.com/v1beta/models/${(window.GAL_CONFIG && window.GAL_CONFIG.GEMINI_MODEL) || 'gemini-2.5-flash'}:generateContent?key=${GEMINI_API_KEY}`;
-const GEMINI_READY   = GEMINI_API_KEY && GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY_HERE';
+// ── AI CHAT (uses shared callAI from gal_config.js) ──────────────────
+//    All AI calls use the /api/ai_chat endpoint with automatic fallback
+const AI_READY = true;
 
-async function callGeminiAI(history, userMsg, systemPrompt) {
-  if (!GEMINI_READY) throw new Error('Gemini API key not set in gal_config.js — paste your key there.');
-  const contents = [];
-  for (const m of (history || [])) {
-    contents.push({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] });
-  }
-  contents.push({ role: 'user', parts: [{ text: userMsg }] });
-  const res = await fetch(GEMINI_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system_instruction: { parts: [{ text: systemPrompt }] },
-      contents,
-      generationConfig: { maxOutputTokens: 800, temperature: 0.7 }
-    })
-  });
-  const data = await res.json();
-  if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-    return data.candidates[0].content.parts[0].text;
-  }
-  throw new Error(data.error?.message || 'Gemini: No response');
+async function callAIChat(history, userMsg, systemPrompt) {
+  if (!AI_READY) throw new Error('AI service not available.');
+  // Use the universal callAI function which handles all the backend logic
+  // including automatic API key fallback on quota/rate-limit errors
+  return await callAI(userMsg, history, systemPrompt);
 }
 
 
@@ -2198,42 +2180,20 @@ async function sendAI(){
   const thinking=appendThinking();
   const sysPrompt = "You are GAL's AI study assistant — a helpful, enthusiastic tutor for school students learning math, science, English, history, geography and computer basics. Keep answers clear, age-appropriate, educational, and encouraging. Use examples, analogies, and emojis occasionally. Max 3 short paragraphs.";
 
-  // Try Gemini first (frontend), then fall back to backend proxy.
-  if (GEMINI_READY) {
-    try {
-      const reply = await callGeminiAI(aiHistory.slice(-8), msg, sysPrompt);
-      thinking.remove();
-      appendAIMsg('bot', reply);
-      aiHistory.push({ role: 'assistant', content: reply });
-      scrollAI();
-      return;
-    } catch (geminiErr) {
-      console.warn('Gemini direct call failed:', geminiErr);
-      thinking.remove();
-      appendAIMsg('bot', `⚠️ Gemini error: ${geminiErr.message || geminiErr}<br><br><b>Most common fixes:</b><br>• Check your key is valid at https://aistudio.google.com/apikey<br>• Make sure no extra spaces/quotes around the key<br>• Try a fresh key if older than 90 days`);
-      scrollAI();
-      return;
-    }
-  }
-
-  // No frontend key → try backend (server-side Gemini)
+  // Use unified backend AI endpoint with automatic fallback on quota/rate-limit
   try {
-    const res = await fetch(API + '/api/ai_chat', {
-      method:  'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+token },
-      body:    JSON.stringify({ message: msg, history: aiHistory.slice(-8), system: sysPrompt })
-    });
-    const d = await res.json();
+    const result = await callAIChat(aiHistory.slice(-8), msg, sysPrompt);
     thinking.remove();
-    if (d.ok) {
-      appendAIMsg('bot', d.reply);
-      aiHistory.push({ role:'assistant', content: d.reply });
+    if (result.ok) {
+      appendAIMsg('bot', result.reply);
+      aiHistory.push({ role:'assistant', content: result.reply });
     } else {
-      appendAIMsg('bot', `⚠️ ${d.msg || 'AI unavailable.'}\n\nTo fix: set <b>GEMINI_API_KEY</b> in dashboard.html (line ~945) <i>or</i> as a server env variable.`);
+      appendAIMsg('bot', `⚠️ ${result.msg || 'AI unavailable.'}\n\nTo fix: Check that GROK_API_KEY is set in your .env file.`);
     }
-  } catch {
+  } catch (err) {
     thinking.remove();
-    appendAIMsg('bot', '⚠️ Cannot reach AI. Set your Gemini API key in dashboard.html (line ~945).');
+    console.error('AI call error:', err);
+    appendAIMsg('bot', `⚠️ Cannot reach AI. Error: ${err.message || 'Unknown error'}`);
   }
   scrollAI();
 }
