@@ -13,3 +13,6 @@ pymongo>=4.10.0
 
 # Firebase (optional)
 # firebase-admin>=6.0.0
+
+# Production server for Render deployment
+gunicorn>=23.0.0
