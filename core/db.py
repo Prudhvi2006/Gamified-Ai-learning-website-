@@ -105,6 +105,20 @@ def all_users_list() -> list:
     return list(load_db()['users'].values())
 
 
+def get_all_users() -> list:
+    """Alias for all_users_list() — returns all users."""
+    return all_users_list()
+
+
+def find_user_by_uid(uid: str) -> dict | None:
+    """Find a user by their unique ID (uid)."""
+    users = get_all_users()
+    for user in users:
+        if user.get('uid') == uid:
+            return user
+    return None
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Sessions
 # ──────────────────────────────────────────────────────────────────────────────

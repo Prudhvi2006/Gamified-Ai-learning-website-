@@ -10,8 +10,8 @@
       "joined": 1777657765,
       "xp": 1550,
       "level": 1,
-      "streak": 3,
-      "last_active": 1778227617,
+      "streak": 1,
+      "last_active": 1778857719,
       "rooms_cleared": 0,
       "missions_done": 0,
       "score": 400,
@@ -20,6 +20,12 @@
       "best_combo": 1,
       "achievements": [],
       "activity": [
+        {
+          "msg": "Daily login streak: 1 days \ud83d\udd25",
+          "xp": 0,
+          "ts": 1778857719,
+          "diff": "system"
+        },
         {
           "msg": "Daily login streak: 3 days \ud83d\udd25",
           "xp": 0,
@@ -81,7 +87,8 @@
         "2026-05-03",
         "2026-05-06",
         "2026-05-07",
-        "2026-05-08"
+        "2026-05-08",
+        "2026-05-15"
       ],
       "study_modules_done": [
         "sm_python_basics"
@@ -266,6 +273,102 @@
           "unlocked": false
         }
       }
+    },
+    "teacher1@example.com": {
+      "uid": "u_9cc548dd383a5a7d",
+      "name": "Teacher One",
+      "email": "teacher1@example.com",
+      "hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+      "class_name": "Grade 9",
+      "grade": "9",
+      "role": "student",
+      "joined": 1778857263,
+      "xp": 250,
+      "level": 1,
+      "streak": 1,
+      "last_active": 1778857265,
+      "rooms_cleared": 0,
+      "missions_done": 0,
+      "score": 0,
+      "accuracy": 0,
+      "hints_used": 0,
+      "best_combo": 1,
+      "achievements": [],
+      "activity": [
+        {
+          "msg": "Account created \u2014 Welcome to GAL! \ud83d\ude80",
+          "xp": 250,
+          "ts": 1778857263,
+          "diff": "system"
+        }
+      ],
+      "streak_days": [
+        "2026-05-15"
+      ],
+      "study_modules_done": [],
+      "team_id": null,
+      "game_progress": {
+        "haunted_mansion": {
+          "levels_done": [],
+          "unlocked": true
+        },
+        "code_red": {
+          "levels_done": [],
+          "unlocked": false
+        },
+        "ai_labyrinth": {
+          "levels_done": [],
+          "unlocked": false
+        }
+      }
+    },
+    "teacher@example.com": {
+      "uid": "u_f7eb855abbc2a7af",
+      "name": "Mr. Anderson",
+      "email": "teacher@example.com",
+      "hash": "cde383eee8ee7a4400adf7a15f716f179a2eb97646b37e089eb8d6d04e663416",
+      "role": "teacher",
+      "class_name": "",
+      "grade": "",
+      "joined": 1778857289,
+      "xp": 0,
+      "level": 1,
+      "streak": 0,
+      "last_active": 1778857590,
+      "rooms_cleared": 0,
+      "missions_done": 0,
+      "score": 0,
+      "accuracy": 0,
+      "hints_used": 0,
+      "best_combo": 1,
+      "achievements": [],
+      "activity": [
+        {
+          "msg": "Teacher account created",
+          "xp": 0,
+          "ts": 1778857289,
+          "diff": "system"
+        }
+      ],
+      "streak_days": [
+        "2026-05-15"
+      ],
+      "study_modules_done": [],
+      "team_id": null,
+      "game_progress": {
+        "haunted_mansion": {
+          "levels_done": [],
+          "unlocked": true
+        },
+        "code_red": {
+          "levels_done": [],
+          "unlocked": false
+        },
+        "ai_labyrinth": {
+          "levels_done": [],
+          "unlocked": false
+        }
+      }
     }
   },
   "sessions": {
@@ -424,6 +527,30 @@
     "200ae2bf31a1afc2a3e25b7a895552286d9686c30955e98ddca508fcb8bd7a23": {
       "email": "pardhupavan456@gmail.com",
       "ts": 1778533993
+    },
+    "a920e846a1e8e83e089e649611008a39d63e9203d03568ce3ad33f0fbdc9c14d": {
+      "email": "teacher1@example.com",
+      "ts": 1778857263
+    },
+    "bd9ec74b6fb881090dc97650765106410b30f620ef91baed832d70d052090e15": {
+      "email": "teacher1@example.com",
+      "ts": 1778857265
+    },
+    "4f81553fb8406da245d635da208e0714590d6a5c45f6b8f348fbccd63278f7a5": {
+      "email": "teacher@example.com",
+      "ts": 1778857311
+    },
+    "3acca0319fa32ca1e89ff0110b3a585df518219f0c04659a29cc18f9a45c7b5b": {
+      "email": "teacher@example.com",
+      "ts": 1778857530
+    },
+    "026aa637802efa7797c3799eadeb6dbae3754721454733b253d5bc7ed6ed95ec": {
+      "email": "teacher@example.com",
+      "ts": 1778857590
+    },
+    "e961ec78e8a8386ae5642184087593d1a5d5035d7b8fa5319f14d7e2de16f53d": {
+      "email": "pardhupavan457@gmail.com",
+      "ts": 1778857719
     }
   },
   "leaderboard": [

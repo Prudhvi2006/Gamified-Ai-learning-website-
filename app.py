@@ -61,14 +61,16 @@ def options_handler(p=''):
 # ──────────────────────────────────────────────────────────────────────────────
 
 _PAGES = [
-    ('/',                   'index.html'),
-    ('/index.html',         'index.html'),
-    ('/dashboard.html',     'dashboard.html'),
-    ('/hauntedmansion.html','hauntedmansion.html'),
-    ('/codered.html',       'codered.html'),
-    ('/shadowquery.html',   'shadowquery.html'),
-    ('/treasurehunt.html',  'treasurehunt.html'),
-    ('/gemini-chat.html',   'gemini-chat.html'),
+    ('/',                      'index.html'),
+    ('/index.html',            'index.html'),
+    ('/dashboard.html',        'dashboard.html'),
+    ('/login.html',            'login.html'),
+    ('/teacher-dashboard.html','teacher-dashboard.html'),
+    ('/hauntedmansion.html',   'hauntedmansion.html'),
+    ('/codered.html',          'codered.html'),
+    ('/shadowquery.html',      'shadowquery.html'),
+    ('/treasurehunt.html',     'treasurehunt.html'),
+    ('/gemini-chat.html',      'gemini-chat.html'),
 ]
 
 for _idx, (_route, _file) in enumerate(_PAGES):
@@ -111,8 +113,9 @@ from api.leaderboard import bp as leaderboard_bp
 from api.study       import bp as study_bp
 from api.team        import bp as team_bp
 from api.ai_chat     import bp as ai_chat_bp
+from api.teacher     import bp as teacher_bp
 
-for bp in (auth_bp, profile_bp, progress_bp, leaderboard_bp, study_bp, team_bp, ai_chat_bp):
+for bp in (auth_bp, profile_bp, progress_bp, leaderboard_bp, study_bp, team_bp, ai_chat_bp, teacher_bp):
     app.register_blueprint(bp)
 
 

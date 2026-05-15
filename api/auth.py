@@ -58,6 +58,7 @@ def register():
         'hash':       hash_pass(password),
         'class_name': class_name,
         'grade':      grade,
+        'role':       'student',
         'joined':     int(time.time()),
         'xp':         250,
         'level':      1,
@@ -109,6 +110,7 @@ def login():
     data     = request.get_json(silent=True) or {}
     email    = str(data.get('email', '')).strip().lower()
     password = str(data.get('password', ''))
+    role     = str(data.get('role', 'student')).strip()
 
     if not email or not password:
         return jsonify({'ok': False, 'msg': 'Email and password required'}), 400
@@ -148,6 +150,7 @@ def login():
         'xp':     user.get('xp', 0),
         'level':  user.get('level', 1),
         'streak': user.get('streak', 0),
+        'role':   user.get('role', 'student'),
     })
 
 
