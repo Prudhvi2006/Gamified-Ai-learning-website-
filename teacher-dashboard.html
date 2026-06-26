@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard — LEVELUP AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            font-size: 28px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .user-info {
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+        .stat-card h3 {
+            color: #667eea;
+            font-size: 32px;
+            margin: 10px 0;
+        }
+        .stat-card p {
+            color: #666;
+            font-size: 14px;
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .students-section, .stats-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+        }
+        .search-bar input {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        thead {
+            background: #f5f7fa;
+            border-bottom: 2px solid #ddd;
+        }
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        tr:hover {
+            background: #f9fafb;
+        }
+        .btn-view {
+            background: #667eea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-view:hover {
+            background: #764ba2;
+        }
+        .student-detail {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: none;
+            margin-top: 30px;
+        }
+        .student-detail.active {
+            display: block;
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .detail-item {
+            background: #f5f7fa;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .detail-item label {
+            display: block;
+            color: #666;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .detail-item value {
+            display: block;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👨‍🏫 Teacher Dashboard</h1>
+        <div class="header-actions">
+            <div class="user-info">
+                <span id="teacherName">Teacher</span>
+            </div>
+            <button class="btn btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Class Stats -->
+        <div id="statsLoading" class="loading" style="display: none;">Loading class statistics...</div>
+        <div id="statsError" class="error" style="display: none;"></div>
+        
+        <div id="statsSection" style="display: none;">
+            <h2 class="section-title">Class Statistics</h2>
+            <div class="grid" id="statsGrid"></div>
+        </div>
+
+        <!-- Students List -->
+        <div id="studentsLoading" class="loading" style="display: none;">Loading students...</div>
+        <div id="studentsError" class="error" style="display: none;"></div>
+        
+        <div id="studentsSection" class="students-section" style="display: none;">
+            <h2 class="section-title">Students</h2>
+            <div class="search-bar">
+                <input type="text" id="studentSearch" placeholder="Search by name or email...">
+            </div>
+            <table id="studentsTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>XP</th>
+                        <th>Level</th>
+                        <th>Accuracy</th>
+                        <th>Streak</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsList"></tbody>
+            </table>
+        </div>
+
+        <!-- Student Detail -->
+        <div id="studentDetail" class="student-detail"></div>
+    </div>
+
+    <script src="gal_config.js"></script>
+    <script>
+        const token = localStorage.getItem('gal_token');
+        const teacherName = localStorage.getItem('gal_name') || 'Teacher';
+        
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+
+        document.getElementById('teacherName').textContent = teacherName;
+        let allStudents = [];
+
+        // Load stats
+        loadClassStats();
+
+        // Load students
+        loadStudents();
+
+        // Search functionality
+        document.getElementById('studentSearch').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#studentsList tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+
+        async function loadClassStats() {
+            document.getElementById('statsLoading').style.display = 'block';
+            try {
+                const resp = await fetch(`${API_BASE}/api/teacher/class-stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await resp.json();
+                document.getElementById('statsLoading').style.display = 'none';
+
+                if (!data.ok) {
+                    showStatsError(data.msg || 'Failed to load statistics');
+                    return;
+                }
+
+                const stats = data.stats;
+                document.getElementById('statsSection').style.display = 'block';
+                
+                const statsGrid = document.getElementById('statsGrid');
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <p>Total Students</p>
+                        <h3>${stats.total_students}</h3>
+                    </div>
+                    <div class="stat-card">
+                        <p>Average XP</p>
+                        <h3>${stats.avg_xp}</h3>
+                    </div>
+                    <div class="stat-card">
+                        <p>Average Accuracy</p>
+                        <h3>${stats.avg_accuracy}%</h3>
+                    </div>
+                    <div class="stat-card">
+                        <p>Average Level</p>
+                        <h3>${stats.avg_level}</h3>
+                    </div>
+                    <div class="stat-card">
+                        <p>Active Today</p>
+                        <h3>${stats.active_today}</h3>
+                    </div>
+                `;
+            } catch (err) {
+                document.getElementById('statsLoading').style.display = 'none';
+                showStatsError('Network error');
+            }
+        }
+
+        async function loadStudents() {
+            document.getElementById('studentsLoading').style.display = 'block';
+            try {
+                const resp = await fetch(`${API_BASE}/api/teacher/students`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await resp.json();
+                document.getElementById('studentsLoading').style.display = 'none';
+
+                if (!data.ok) {
+                    showStudentsError(data.msg || 'Failed to load students');
+                    return;
+                }
+
+                allStudents = data.students;
+                document.getElementById('studentsSection').style.display = 'block';
+                
+                const tbody = document.getElementById('studentsList');
+                tbody.innerHTML = allStudents.map(s => `
+                    <tr>
+                        <td>${s.name}</td>
+                        <td>${s.email}</td>
+                        <td>${s.xp}</td>
+                        <td>${s.level}</td>
+                        <td>${s.accuracy}%</td>
+                        <td>${s.streak}</td>
+                        <td><button class="btn-view" onclick="viewStudent('${s.uid}')">View</button></td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                document.getElementById('studentsLoading').style.display = 'none';
+                showStudentsError('Network error');
+            }
+        }
+
+        async function viewStudent(uid) {
+            try {
+                const resp = await fetch(`${API_BASE}/api/teacher/student/${uid}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await resp.json();
+
+                if (!data.ok) {
+                    alert(data.msg || 'Failed to load student');
+                    return;
+                }
+
+                const student = data.student;
+                const detail = document.getElementById('studentDetail');
+                detail.innerHTML = `
+                    <button class="btn" onclick="closeStudentDetail()" style="margin-bottom: 20px;">← Back to List</button>
+                    <h2 class="section-title">${student.name}</h2>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Email</label>
+                            <value>${student.email}</value>
+                        </div>
+                        <div class="detail-item">
+                            <label>XP</label>
+                            <value>${student.xp}</value>
+                        </div>
+                        <div class="detail-item">
+                            <label>Level</label>
+                            <value>${student.level}</value>
+                        </div>
+                        <div class="detail-item">
+                            <label>Accuracy</label>
+                            <value>${student.accuracy}%</value>
+                        </div>
+                        <div class="detail-item">
+                            <label>Current Streak</label>
+                            <value>${student.streak} days</value>
+                        </div>
+                        <div class="detail-item">
+                            <label>Rooms Cleared</label>
+                            <value>${student.rooms_cleared}</value>
+                        </div>
+                        <div class="detail-item">
+                            <label>Total Questions</label>
+                            <value>${student.total_questions}</value>
+                        </div>
+                        <div class="detail-item">
+                            <label>Correct Answers</label>
+                            <value>${student.correct_answers}</value>
+                        </div>
+                        <div class="detail-item">
+                            <label>Last Active</label>
+                            <value>${student.last_active}</value>
+                        </div>
+                        <div class="detail-item">
+                            <label>Joined</label>
+                            <value>${student.join_date}</value>
+                        </div>
+                    </div>
+                `;
+                detail.classList.add('active');
+                window.scrollTo(0, 0);
+            } catch (err) {
+                alert('Error loading student details');
+            }
+        }
+
+        function closeStudentDetail() {
+            document.getElementById('studentDetail').classList.remove('active');
+        }
+
+        function showStatsError(msg) {
+            document.getElementById('statsError').textContent = msg;
+            document.getElementById('statsError').style.display = 'block';
+        }
+
+        function showStudentsError(msg) {
+            document.getElementById('studentsError').textContent = msg;
+            document.getElementById('studentsError').style.display = 'block';
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }
+    </script>
+</body>
+</html>

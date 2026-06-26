@@ -1,0 +1,112 @@
+[2026-05-12 11:05:32] INFO levelup.app — LEVELUP AI v4.0 — env=testing  db=json  ai=gemini
+[2026-05-12 11:05:53] INFO levelup.app — LEVELUP AI v4.0 — env=testing  db=json  ai=gemini
+[2026-05-12 11:06:23] INFO levelup.app — LEVELUP AI v4.0 — env=testing  db=json  ai=gemini
+[2026-05-12 11:06:50] INFO levelup.app — LEVELUP AI v4.0 — env=testing  db=json  ai=gemini
+[2026-05-12 11:17:24] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-12 11:26:52] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-12 11:26:58] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-12 11:29:43] INFO services.user_service — User logged in: pardhupavan457@gmail.com
+[2026-05-12 11:30:02] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-12 11:30:02] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-12 11:30:10] INFO services.user_service — User logged in: pardhupavan457@gmail.com
+[2026-05-12 11:30:13] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-12 11:30:13] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-12 11:33:08] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-12 11:33:08] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-12 11:34:18] INFO services.user_service — User logged in: pardhupavan456@gmail.com
+[2026-05-12 11:34:20] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-12 11:34:20] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-12 11:37:36] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-12 11:37:48] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-12 11:37:57] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-12 11:44:11] INFO services.user_service — User registered: Test User (test@test.com)
+[2026-05-12 11:45:32] INFO services.user_service — User logged in: pardhupavan457@gmail.com
+[2026-05-12 11:45:34] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-12 11:45:34] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-12 12:00:54] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-12 12:00:54] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-12 12:04:48] INFO services.user_service — User logged in: pardhupavan456@gmail.com
+[2026-05-12 12:04:50] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-12 12:09:41] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-12 12:09:48] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-12 14:53:45] INFO services.user_service — User logged in: pardhupavan456@gmail.com
+[2026-05-12 14:53:47] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:27:54] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 13:28:02] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 13:31:46] INFO services.user_service — User logged in: pardhupavan457@gmail.com
+[2026-05-15 13:31:48] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:31:48] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:31:54] INFO services.user_service — User logged in: pardhupavan457@gmail.com
+[2026-05-15 13:32:00] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:32:00] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:32:42] INFO services.user_service — User logged in: pardhupavan457@gmail.com
+[2026-05-15 13:32:46] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:32:46] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:33:50] INFO services.user_service — User registered: Test User (test@example.com)
+[2026-05-15 13:35:52] INFO services.user_service — User logged in: pardhupavan457@gmail.com
+[2026-05-15 13:35:54] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:35:54] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:37:26] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:37:26] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:37:57] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:37:57] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:38:08] INFO services.user_service — User registered: Test User 1778832485 (test1778832485@example.com)
+[2026-05-15 13:38:16] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:38:16] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:38:33] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:40:07] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 13:40:14] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 13:40:20] INFO services.user_service — User registered: Dashboard User (dashboard_user@example.com)
+[2026-05-15 13:40:28] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:40:28] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:40:44] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:43:56] INFO services.user_service — User logged in: pardhupavan457@gmail.com
+[2026-05-15 13:43:59] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 13:43:59] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 14:14:23] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 14:14:30] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 14:18:04] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 14:18:05] INFO services.user_service — User registered: Test User (test@levelup.local)
+[2026-05-15 14:18:38] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 14:18:45] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 14:18:56] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 14:19:10] INFO services.user_service — User registered: Dashboard User (dashboard@test.local)
+[2026-05-15 14:19:24] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 14:20:21] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 14:20:22] INFO services.user_service — User registered: Fresh Test User (freshtest99@test.local)
+[2026-05-15 14:20:24] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 14:21:32] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 14:21:39] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 14:22:10] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 14:22:22] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 14:22:23] INFO services.user_service — User registered: Working User (working20261@test.local)
+[2026-05-15 14:22:38] INFO services.user_service — User registered: Dashboard Test (dashboard2026@test.local)
+[2026-05-15 14:23:20] INFO services.user_service — User logged in: pardhupavan457@gmail.com
+[2026-05-15 14:24:13] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 19:30:05] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:30:27] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:31:11] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:31:12] INFO services.user_service — User registered: Test Player 1 (leaderboard_test1@test.local)
+[2026-05-15 19:31:16] INFO services.user_service — User registered: Test Player 2 (leaderboard_test2@test.local)
+[2026-05-15 19:31:20] INFO services.user_service — User registered: Test Player 3 (leaderboard_test3@test.local)
+[2026-05-15 19:34:56] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 19:34:57] WARNING core.errors — AUTH_ERROR — Authentication required
+[2026-05-15 19:52:53] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:53:00] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:54:00] INFO services.user_service — User logged in: pardhupavan457@gmail.com
+[2026-05-15 19:55:15] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:55:15] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:56:46] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:56:46] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:57:33] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:57:33] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:58:01] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:58:01] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:58:29] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 19:58:30] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 20:05:57] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 20:05:57] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 20:07:35] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 20:07:35] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 20:09:11] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini
+[2026-05-15 20:09:11] INFO levelup.app — LEVELUP AI v4.0 — env=development  db=json  ai=gemini

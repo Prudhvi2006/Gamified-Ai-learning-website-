@@ -1,0 +1,2226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CODE RED — AI Bomb Defusion · Multi-Language</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="gal_config.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+:root{
+  --red:#ff1a1a;--red2:#ff4444;--red3:#cc0000;--red4:#800000;
+  --cyan:#00ffff;--cyan2:#00cccc;--cyan3:#004444;
+  --green:#00ff41;--green2:#00cc33;--green3:#003311;
+  --amber:#ffaa00;--amber2:#cc7700;
+  --purple:#aa44ff;--purple2:#6600cc;
+  --panel:#080808;--panel2:#0d0d0d;--panel3:#111;
+  --border:#1a1a1a;--border2:#222;
+  --text:#ccc;--text2:#888;--text3:#444;
+  --glow-red:0 0 20px rgba(255,26,26,.4);
+  --glow-green:0 0 20px rgba(0,255,65,.4);
+  --glow-cyan:0 0 20px rgba(0,255,255,.3);
+  --glow-amber:0 0 20px rgba(255,170,0,.3);
+  --glow-purple:0 0 20px rgba(170,68,255,.3);
+  --scanline:rgba(0,0,0,.12);
+  /* Language accent colors */
+  --lang-js:#f7df1e;--lang-c:#a8b9cc;--lang-cpp:#00599c;
+}
+html,body{height:100%;overflow:hidden;background:#000;font-family:'Share Tech Mono',monospace;color:var(--text);cursor:crosshair}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,var(--scanline) 2px,var(--scanline) 4px);pointer-events:none;z-index:9999}
+body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.85) 100%);pointer-events:none;z-index:9998}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+#app{width:100%;height:100%;position:relative;overflow:hidden;z-index:1}
+
+/* ── LOADING ──────────────────────────────── */
+#loading{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.2rem;z-index:9000;transition:opacity .6s}
+.ld-logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(1.5rem,4vw,2.5rem);color:var(--red);letter-spacing:.2em;text-align:center}
+.ld-logo span{color:#fff}
+.ld-bar-wrap{width:320px;height:2px;background:#0d0d0d;border:1px solid #1a1a1a;overflow:hidden}
+.ld-bar{height:100%;background:linear-gradient(90deg,var(--red3),var(--red));width:0;transition:width .15s linear}
+.ld-msg{font-size:.65rem;color:var(--red);letter-spacing:.35em;animation:blink .7s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.ld-steps{display:flex;gap:.5rem;margin-top:.5rem}
+.ld-step{width:6px;height:6px;border:1px solid var(--border2);background:transparent;transition:background .3s}
+.ld-step.done{background:var(--red)}
+
+/* ── LANGUAGE SELECTOR ───────────────────── */
+.lang-selector{display:flex;gap:.4rem;margin:.5rem 0;justify-content:center}
+.lang-btn{font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.15em;padding:.45rem 1.1rem;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.lang-btn::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .25s}
+.lang-btn.lang-js.active,.lang-btn.lang-js:hover{border-color:var(--lang-js);color:var(--lang-js);box-shadow:0 0 18px rgba(247,223,30,.25)}
+.lang-btn.lang-c.active,.lang-btn.lang-c:hover{border-color:var(--lang-c);color:var(--lang-c);box-shadow:0 0 18px rgba(168,185,204,.25)}
+.lang-btn.lang-cpp.active,.lang-btn.lang-cpp:hover{border-color:var(--lang-cpp);color:#5599ff;box-shadow:0 0 18px rgba(0,89,156,.4)}
+.lang-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.5rem;color:var(--text3);letter-spacing:.3em;margin-bottom:.2rem}
+.lang-badge-dot{width:6px;height:6px;border-radius:50%}
+.lang-badge-dot.js{background:var(--lang-js)}
+.lang-badge-dot.c{background:var(--lang-c)}
+.lang-badge-dot.cpp{background:#5599ff}
+
+/* ── INTRO ────────────────────────────────── */
+#intro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;z-index:10;overflow-y:auto;padding:1rem}
+.intro-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,26,26,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,26,26,.06) 1px,transparent 1px);background-size:48px 48px;animation:gridMove 25s linear infinite;pointer-events:none}
+@keyframes gridMove{from{background-position:0 0}to{background-position:48px 48px}}
+.intro-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;width:100%;max-width:740px;padding-bottom:2rem}
+.classified-tag{font-size:.58rem;color:#ff4444;letter-spacing:.5em;animation:blink .9s step-end infinite;margin-top:.5rem}
+.game-logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(2.5rem,7vw,5.5rem);color:var(--red);letter-spacing:.1em;text-align:center;margin:.4rem 0;position:relative}
+.game-logo::before,.game-logo::after{content:attr(data-text);position:absolute;inset:0;text-align:center}
+.game-logo::before{color:var(--cyan);clip-path:polygon(0 0,100% 0,100% 45%,0 45%);animation:glitch1 4s infinite}
+.game-logo::after{color:#ff00ff;clip-path:polygon(0 60%,100% 60%,100% 100%,0 100%);animation:glitch2 4s infinite}
+@keyframes glitch1{0%,90%,100%{transform:translateX(0)}92%{transform:translateX(-4px)}94%{transform:translateX(4px)}96%{transform:translateX(0)}}
+@keyframes glitch2{0%,90%,100%{transform:translateX(0)}91%{transform:translateX(4px)}93%{transform:translateX(-4px)}95%{transform:translateX(0)}}
+.game-sub{font-family:'Rajdhani',sans-serif;font-size:clamp(.85rem,2vw,1.1rem);color:var(--cyan);letter-spacing:.45em;text-transform:uppercase;opacity:.85}
+.season-tag{font-size:.58rem;color:var(--text3);letter-spacing:.3em;margin-top:.2rem}
+.warning-box{margin:.8rem 0;border:1px solid var(--red3);padding:.9rem 1.8rem;position:relative;text-align:center;width:100%;max-width:500px;animation:warnPulse 1.2s ease-in-out infinite}
+@keyframes warnPulse{0%,100%{box-shadow:0 0 12px rgba(255,26,26,.25),inset 0 0 12px rgba(255,26,26,.05)}50%{box-shadow:0 0 40px rgba(255,26,26,.6),inset 0 0 30px rgba(255,26,26,.12)}}
+.warning-box::before,.warning-box::after{content:'';position:absolute;width:8px;height:8px;border:1px solid var(--red)}
+.warning-box::before{top:-1px;left:-1px;border-right:none;border-bottom:none}
+.warning-box::after{bottom:-1px;right:-1px;border-left:none;border-top:none}
+.warning-box p{font-size:.75rem;color:#ff6666;letter-spacing:.15em;line-height:1.8}
+.warning-box p span{color:var(--red);font-weight:bold}
+
+.intro-tabs{display:flex;gap:.4rem;margin:.5rem 0;width:100%;max-width:740px}
+.itab{flex:1;font-family:'Rajdhani',sans-serif;font-size:.7rem;letter-spacing:.15em;padding:.5rem;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;text-transform:uppercase;transition:all .2s}
+.itab.active{border-color:var(--red3);color:var(--red);background:rgba(255,26,26,.06)}
+.itab-panel{display:none;width:100%;max-width:740px}
+.itab-panel.active{display:block}
+
+.level-progress-section{width:100%;background:rgba(255,255,255,.02);border:1px solid var(--border);padding:.8rem 1rem}
+.lps-title{font-size:.55rem;color:var(--text3);letter-spacing:.3em;margin-bottom:.6rem}
+.level-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:.3rem}
+.level-dot{width:100%;aspect-ratio:1;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.45rem;color:var(--text3);cursor:pointer;transition:all .2s;position:relative;flex-direction:column;gap:.1rem}
+.level-dot.completed{border-color:var(--green2);background:rgba(0,255,65,.08);color:var(--green)}
+.level-dot.current{border-color:var(--amber);background:rgba(255,170,0,.08);color:var(--amber);animation:warnPulse .8s ease-in-out infinite}
+.level-dot.locked{opacity:.3;cursor:not-allowed}
+.level-dot:hover:not(.locked){transform:scale(1.1)}
+.lvl-grade{font-size:.4rem;color:var(--purple);letter-spacing:.05em}
+
+.stats-row{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;margin:.7rem 0}
+.stat-box{text-align:center;padding:.65rem 1rem;border:1px solid var(--border);background:rgba(255,255,255,.02);position:relative;transition:all .2s;min-width:80px}
+.stat-box:hover{border-color:var(--red3);background:rgba(255,26,26,.04)}
+.stat-val{font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--amber)}
+.stat-lbl{font-size:.5rem;color:var(--text2);letter-spacing:.25em;margin-top:.2rem}
+
+.mode-label{font-family:'Rajdhani',sans-serif;font-size:.7rem;color:var(--text3);letter-spacing:.25em;margin:.6rem 0 .3rem;text-transform:uppercase}
+.mode-row{display:flex;gap:.4rem;flex-wrap:wrap;justify-content:center}
+.mode-btn{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.7rem;letter-spacing:.1em;padding:.5rem .9rem;background:rgba(255,26,26,.03);border:1px solid var(--border);color:var(--text2);cursor:pointer;text-transform:uppercase;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:.2rem}
+.mode-btn-sub{font-size:.5rem;color:var(--text3);letter-spacing:.05em}
+.mode-btn:hover,.mode-btn.active{border-color:var(--red3);color:var(--red);background:rgba(255,26,26,.08)}
+.mode-btn.active .mode-btn-sub{color:var(--red)}
+.mode-btn.active{box-shadow:var(--glow-red)}
+
+.start-btn{margin-top:.9rem;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.9rem;letter-spacing:.3em;padding:1rem 3rem;background:transparent;border:2px solid var(--red);color:var(--red);cursor:pointer;text-transform:uppercase;position:relative;overflow:hidden;transition:all .3s}
+.start-btn::before{content:'';position:absolute;inset:0;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform .3s;z-index:-1}
+.start-btn:hover{color:#000;box-shadow:0 0 50px rgba(255,26,26,.5)}
+.start-btn:hover::before{transform:scaleX(1)}
+.lb-link{margin-top:.6rem;font-size:.6rem;color:var(--text3);letter-spacing:.2em;cursor:pointer;transition:color .2s}
+.lb-link:hover{color:var(--amber)}
+
+/* ── BRIEFING ─────────────────────────────── */
+#briefing-modal{display:none;position:absolute;inset:0;background:rgba(0,0,0,.95);z-index:80;align-items:center;justify-content:center;flex-direction:column}
+#briefing-modal.show{display:flex}
+.brief-box{max-width:620px;width:92%;border:1px solid rgba(255,26,26,.3);padding:2rem;position:relative;background:#050505}
+.brief-corner{position:absolute;width:12px;height:12px;border:1px solid var(--red)}
+.brief-corner.tl{top:-1px;left:-1px;border-right:none;border-bottom:none}
+.brief-corner.tr{top:-1px;right:-1px;border-left:none;border-bottom:none}
+.brief-corner.bl{bottom:-1px;left:-1px;border-right:none;border-top:none}
+.brief-corner.br{bottom:-1px;right:-1px;border-left:none;border-top:none}
+.brief-level{font-size:.6rem;color:var(--red);letter-spacing:.4em;margin-bottom:.4rem}
+.brief-title{font-family:'Orbitron',sans-serif;font-size:1.4rem;color:var(--text);letter-spacing:.12em;margin-bottom:.5rem}
+.brief-lore{font-size:.75rem;color:var(--text2);line-height:2;margin-bottom:1rem;border-left:2px solid var(--red3);padding-left:.9rem}
+.brief-objectives{margin-bottom:1.2rem}
+.brief-obj-title{font-size:.55rem;color:var(--cyan);letter-spacing:.3em;margin-bottom:.5rem}
+.brief-obj{display:flex;align-items:flex-start;gap:.5rem;font-size:.68rem;color:var(--text2);margin-bottom:.3rem;line-height:1.6}
+.brief-obj-num{color:var(--red);flex-shrink:0;font-family:'Orbitron',sans-serif;font-size:.6rem;margin-top:.1rem}
+.brief-meta{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;padding-top:.8rem;border-top:1px solid var(--border)}
+.brief-meta-item{display:flex;flex-direction:column;gap:.2rem}
+.brief-meta-lbl{font-size:.5rem;color:var(--text3);letter-spacing:.3em}
+.brief-meta-val{font-family:'Orbitron',sans-serif;font-size:.75rem;color:var(--amber)}
+.brief-start{margin-top:1.4rem;font-family:'Orbitron',sans-serif;font-size:.8rem;letter-spacing:.25em;padding:.9rem 2.5rem;background:rgba(255,26,26,.08);border:1px solid var(--red2);color:var(--red);cursor:pointer;transition:all .2s;width:100%}
+.brief-start:hover{background:rgba(255,26,26,.2);box-shadow:var(--glow-red)}
+.brief-countdown{font-family:'Orbitron',sans-serif;font-size:.7rem;color:var(--text3);letter-spacing:.2em;margin-top:.5rem;text-align:center}
+
+/* ── GAME ─────────────────────────────────── */
+#game{position:absolute;inset:0;display:none;flex-direction:column}
+.hud-top{display:flex;align-items:center;justify-content:space-between;padding:.4rem .9rem;background:rgba(0,0,0,.97);border-bottom:1px solid rgba(255,26,26,.15);flex-shrink:0;gap:.4rem;flex-wrap:wrap;z-index:20;position:relative}
+.hud-logo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:.75rem;color:var(--red);letter-spacing:.12em;display:flex;align-items:center;gap:.4rem}
+.hud-logo-dot{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:var(--glow-red);animation:blink .8s step-end infinite}
+/* Language indicator in HUD */
+.hud-lang{font-family:'Orbitron',sans-serif;font-size:.6rem;padding:.2rem .5rem;border:1px solid var(--border2);letter-spacing:.15em}
+.hud-lang.js{color:var(--lang-js);border-color:rgba(247,223,30,.3);background:rgba(247,223,30,.05)}
+.hud-lang.c{color:var(--lang-c);border-color:rgba(168,185,204,.3);background:rgba(168,185,204,.05)}
+.hud-lang.cpp{color:#5599ff;border-color:rgba(0,89,156,.4);background:rgba(0,89,156,.06)}
+.timer-wrap{display:flex;align-items:center;gap:.4rem}
+.timer-lbl{font-size:.5rem;color:var(--text2);letter-spacing:.25em}
+.timer-display{font-family:'Orbitron',sans-serif;font-size:clamp(1.2rem,3.5vw,1.9rem);color:var(--red);min-width:82px;text-align:center;text-shadow:0 0 20px rgba(255,26,26,.6);animation:timerPulse 1s ease-in-out infinite}
+.timer-display.warning{color:#ff6600;text-shadow:0 0 30px rgba(255,102,0,.8);animation:timerFlash .4s step-end infinite}
+.timer-display.frozen{color:var(--cyan);text-shadow:0 0 30px rgba(0,255,255,.8);animation:none}
+@keyframes timerPulse{0%,100%{text-shadow:0 0 15px rgba(255,26,26,.5)}50%{text-shadow:0 0 35px rgba(255,26,26,.9)}}
+@keyframes timerFlash{0%,100%{opacity:1}50%{opacity:.3}}
+.danger-wrap{display:flex;align-items:center;gap:.4rem}
+.danger-lbl{font-size:.5rem;color:var(--text2);letter-spacing:.25em}
+.danger-bar-track{width:100px;height:5px;background:#0a0a0a;border:1px solid #1a1a1a;overflow:hidden}
+.danger-bar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--amber),var(--red));transition:width .6s ease}
+.hud-powerups{display:flex;gap:.3rem;align-items:center}
+.hud-pu{width:28px;height:28px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;transition:all .2s;position:relative;background:rgba(0,0,0,.6)}
+.hud-pu:hover{border-color:var(--cyan);background:rgba(0,255,255,.08)}
+.hud-pu.empty{opacity:.25;cursor:not-allowed;filter:grayscale(1)}
+.hud-pu .pu-cnt{position:absolute;top:-5px;right:-5px;font-size:.45rem;background:var(--red);color:#fff;width:12px;height:12px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif}
+.hud-stats{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.hstat{display:flex;flex-direction:column;align-items:center}
+.hstat-val{font-family:'Orbitron',sans-serif;font-size:.8rem;color:var(--cyan);line-height:1}
+.hstat-lbl{font-size:.46rem;color:var(--text2);letter-spacing:.2em;margin-top:.1rem}
+.hud-btns{display:flex;gap:.25rem}
+.hud-btn{font-size:.55rem;color:var(--text3);background:none;border:1px solid var(--border);padding:.28rem .5rem;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif;letter-spacing:.1em}
+.hud-btn:hover{color:var(--text);border-color:var(--border2)}
+.hud-btn.back-btn:hover{color:var(--cyan);border-color:var(--cyan3)}
+.game-main{flex:1;display:flex;overflow:hidden;min-height:0}
+
+/* ── BOMB PANEL ──────────────────────────── */
+.bomb-panel{width:235px;flex-shrink:0;background:rgba(6,0,0,.97);border-right:1px solid rgba(255,26,26,.1);display:flex;flex-direction:column;align-items:center;padding:.7rem .6rem;gap:.55rem;overflow:hidden;position:relative}
+#bomb-canvas{width:200px;height:180px;display:block;border-radius:2px}
+.wires-section{width:100%;display:flex;flex-direction:column;gap:.28rem}
+.wires-title{font-size:.48rem;color:var(--text3);letter-spacing:.3em;text-align:center;margin-bottom:.12rem}
+.wire-row{display:flex;align-items:center;gap:.4rem;font-size:.52rem;color:var(--text3);letter-spacing:.1em}
+.wire-row span{width:16px;text-align:right;flex-shrink:0}
+.wire{flex:1;height:4px;border-radius:2px;cursor:pointer;transition:all .4s}
+.wire.cut{opacity:.12;filter:brightness(.2);cursor:default}
+.wire.active-wire{animation:wirePulse .55s ease-in-out infinite}
+@keyframes wirePulse{0%,100%{filter:brightness(1)}50%{filter:brightness(2.5) saturate(2)}}
+.bomb-status{width:100%;padding:.45rem .6rem;background:rgba(4,0,0,.8);border:1px solid rgba(255,26,26,.1);font-size:.58rem;color:#553333;line-height:1.6}
+.bomb-status-title{color:var(--red);font-size:.48rem;letter-spacing:.3em;margin-bottom:.2rem}
+.bomb-level-tag{font-size:.48rem;color:var(--amber);letter-spacing:.2em;text-align:center;padding:.25rem;border:1px solid rgba(255,170,0,.2)}
+.grade-display{width:100%;display:flex;align-items:center;justify-content:space-between;padding:.3rem .6rem;background:rgba(0,0,0,.4);border:1px solid var(--border)}
+.grade-lbl{font-size:.48rem;color:var(--text3);letter-spacing:.2em}
+.grade-val{font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--green)}
+.grade-val.A{color:var(--cyan)}.grade-val.B{color:var(--amber)}.grade-val.C{color:#ff8800}.grade-val.F{color:var(--red)}
+
+/* ── CODE PANEL ──────────────────────────── */
+.code-panel{flex:1;display:flex;flex-direction:column;min-width:0;background:rgba(4,4,4,.98);position:relative}
+.stage-header{padding:.5rem .8rem;background:rgba(0,0,0,.92);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;flex-shrink:0}
+.stage-badge{font-family:'Orbitron',sans-serif;font-size:.58rem;padding:.25rem .6rem;background:rgba(255,26,26,.12);border:1px solid rgba(255,26,26,.3);color:var(--red);letter-spacing:.18em}
+.stage-type-badge{font-family:'Rajdhani',sans-serif;font-size:.6rem;padding:.2rem .45rem;border:1px solid var(--border);color:var(--text2);letter-spacing:.1em;text-transform:uppercase}
+.stage-title{font-family:'Rajdhani',sans-serif;font-size:.9rem;font-weight:700;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stage-pts{font-family:'Orbitron',sans-serif;font-size:.6rem;color:var(--amber)}
+.stage-lang-tag{font-family:'Orbitron',sans-serif;font-size:.55rem;padding:.18rem .4rem;border:1px solid transparent}
+.stage-lang-tag.JS{color:var(--lang-js);border-color:rgba(247,223,30,.35)}
+.stage-lang-tag.C{color:var(--lang-c);border-color:rgba(168,185,204,.35)}
+.stage-lang-tag.CPP{color:#5599ff;border-color:rgba(0,89,156,.5)}
+.editor-area{flex:1;display:flex;flex-direction:column;min-height:0}
+.challenge-desc{padding:.55rem .8rem;background:rgba(255,0,0,.02);border-bottom:1px solid rgba(255,255,255,.03);font-size:.72rem;color:#9a9a9a;line-height:1.75;flex-shrink:0;max-height:90px;overflow-y:auto}
+.challenge-desc::-webkit-scrollbar{width:2px}
+.challenge-desc::-webkit-scrollbar-thumb{background:#1a1a1a}
+.err-tag{color:var(--red);font-weight:bold}.hint-tag{color:var(--cyan)}.ok-tag{color:var(--green)}
+.editor-wrap{flex:1;display:flex;min-height:0;position:relative;overflow:hidden}
+.line-nums{width:34px;background:#030303;border-right:1px solid #0a0a0a;padding:.65rem 0;font-size:.7rem;color:#1e1e1e;line-height:1.65;text-align:right;padding-right:.4rem;flex-shrink:0;overflow:hidden;font-family:'Share Tech Mono',monospace;user-select:none;pointer-events:none}
+.editor-container{flex:1;position:relative;overflow:hidden}
+#code-highlight{position:absolute;inset:0;padding:.65rem .75rem;font-family:'Share Tech Mono',monospace;font-size:.78rem;line-height:1.65;color:transparent;pointer-events:none;white-space:pre-wrap;word-break:break-all;overflow:hidden;background:transparent}
+#code-editor{position:absolute;inset:0;background:transparent;border:none;outline:none;resize:none;font-family:'Share Tech Mono',monospace;font-size:.78rem;color:rgba(216,216,216,.92);line-height:1.65;padding:.65rem .75rem;caret-color:var(--cyan);user-select:text;tab-size:2;white-space:pre-wrap;word-break:break-all;-webkit-text-fill-color:transparent;caretColor:var(--cyan);overflow-y:auto}
+#code-editor::-webkit-scrollbar{width:3px}
+#code-editor::-webkit-scrollbar-thumb{background:#1a1a1a}
+/* JS syntax */
+.s-kw{color:#ff6688}.s-str{color:#88cc44}.s-num{color:#ffcc44}.s-cmt{color:#446644;font-style:italic}.s-fn{color:#88aaff}.s-op{color:#ff8844}.s-var{color:var(--cyan)}.s-prop{color:#ddaaff}.s-bool{color:#ff8888}
+/* C/C++ extra syntax */
+.s-preproc{color:#cc8844}.s-type{color:#5599ff}.s-macro{color:#cc44cc}.s-ptr{color:#ff9944}
+.editor-toolbar{display:flex;align-items:center;gap:.35rem;padding:.4rem .7rem;background:#030303;border-top:1px solid #0d0d0d;flex-shrink:0;flex-wrap:wrap}
+.exec-btn{font-family:'Orbitron',sans-serif;font-size:.58rem;letter-spacing:.2em;padding:.45rem 1.2rem;background:rgba(0,255,65,.06);border:1px solid var(--green2);color:var(--green);cursor:pointer;text-transform:uppercase;transition:all .2s}
+.exec-btn:hover{background:rgba(0,255,65,.18);box-shadow:var(--glow-green)}
+.tool-btn{font-family:'Rajdhani',sans-serif;font-size:.66rem;letter-spacing:.1em;padding:.35rem .75rem;background:transparent;border:1px solid var(--border);color:var(--text2);cursor:pointer;text-transform:uppercase;transition:all .2s}
+.tool-btn:hover{border-color:var(--amber);color:var(--amber)}
+.tool-btn.ai-btn:hover{border-color:var(--cyan2);color:var(--cyan)}
+.kbd-hint{font-size:.5rem;color:var(--text3);margin-left:auto;letter-spacing:.1em}
+
+/* ── TERMINAL ─────────────────────────────── */
+.terminal-panel{width:250px;flex-shrink:0;background:rgba(0,4,0,.97);border-left:1px solid rgba(0,255,65,.08);display:flex;flex-direction:column}
+.term-header{display:flex;align-items:center;gap:.35rem;padding:.45rem .65rem;border-bottom:1px solid rgba(0,255,65,.06);flex-shrink:0}
+.term-dot{width:8px;height:8px;border-radius:50%}
+.term-title{font-size:.48rem;color:#003300;letter-spacing:.3em;margin-left:.25rem}
+.terminal-body{flex:1;padding:.45rem .65rem;overflow-y:auto;font-size:.62rem;line-height:1.7;min-height:0}
+.terminal-body::-webkit-scrollbar{width:2px}
+.terminal-body::-webkit-scrollbar-thumb{background:#001100}
+.t-line{color:#004400;margin-bottom:.08rem;word-break:break-all}
+.t-line.ok{color:#00cc44}.t-line.err{color:#cc2200}.t-line.warn{color:#888800}.t-line.sys{color:#004488}.t-line.ai{color:#006666}.t-line.exec{color:var(--cyan)}.t-line.grade{color:var(--purple)}
+.t-prompt{color:#006600;font-weight:bold}
+.exec-result{border-top:1px solid rgba(0,255,65,.06);flex-shrink:0;max-height:90px;overflow-y:auto;padding:.4rem .65rem}
+.exec-result::-webkit-scrollbar{width:2px}
+.exec-result-title{font-size:.48rem;color:#003300;letter-spacing:.3em;margin-bottom:.2rem}
+.exec-line{font-size:.62rem;color:#00aa44;line-height:1.6}.exec-line.err{color:#cc4422}
+.term-input-row{padding:.35rem .65rem;border-top:1px solid rgba(0,255,65,.06);display:flex;align-items:center;flex-shrink:0}
+.term-cursor{animation:blink .5s step-end infinite;color:var(--green);font-size:.62rem}
+.stages-track{padding:.35rem .5rem;border-top:1px solid rgba(0,255,65,.06);display:flex;gap:.22rem;flex-wrap:wrap;flex-shrink:0}
+.stage-pip{width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.43rem;font-family:'Orbitron',sans-serif;border:1px solid var(--border);color:var(--text3);cursor:default;transition:all .3s}
+.stage-pip.done{border-color:var(--green2);color:var(--green);background:rgba(0,255,65,.05)}
+.stage-pip.current{border-color:var(--amber);color:var(--amber);animation:warnPulse .8s ease-in-out infinite}
+.stage-pip.locked{opacity:.2}
+
+/* ── HUD BOTTOM ──────────────────────────── */
+.hud-bottom{display:flex;align-items:center;gap:.8rem;padding:.35rem .9rem;background:rgba(0,0,0,.97);border-top:1px solid rgba(255,26,26,.1);flex-shrink:0;flex-wrap:wrap}
+.xp-wrap{display:flex;align-items:center;gap:.4rem;flex:1;min-width:160px}
+.xp-lbl{font-size:.48rem;color:var(--text3);letter-spacing:.2em}
+.xp-track{flex:1;height:4px;background:#0a0a0a;border:1px solid #111;overflow:hidden;position:relative}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--red3),var(--amber));transition:width .5s ease}
+.xp-text{font-size:.48rem;color:var(--amber);letter-spacing:.1em;font-family:'Orbitron',sans-serif}
+.bottom-streak{color:var(--amber);font-family:'Orbitron',sans-serif;font-size:.68rem}
+.bottom-mode{font-size:.52rem;color:var(--text3);letter-spacing:.2em}
+.bottom-grade{font-family:'Orbitron',sans-serif;font-size:.8rem}
+.abort-btn{font-family:'Orbitron',sans-serif;font-size:.52rem;letter-spacing:.15em;padding:.28rem .75rem;border:1px solid rgba(255,26,26,.2);color:rgba(255,26,26,.4);background:none;cursor:pointer;transition:all .2s}
+.abort-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* ── HINT BOX ────────────────────────────── */
+#hint-box{display:none;position:absolute;bottom:55px;right:10px;width:270px;background:#060606;border:1px solid rgba(0,255,255,.2);padding:.9rem;z-index:50;box-shadow:0 0 30px rgba(0,0,0,.8)}
+.hint-title{font-family:'Orbitron',sans-serif;font-size:.58rem;color:var(--cyan);letter-spacing:.2em;margin-bottom:.4rem}
+.hint-text{font-size:.68rem;color:var(--text2);line-height:1.8}
+.hint-close{position:absolute;top:.35rem;right:.45rem;background:none;border:none;color:var(--text3);cursor:pointer;font-size:.8rem}
+.hint-close:hover{color:var(--red)}
+
+/* ── AI PANEL ────────────────────────────── */
+#ai-panel{position:absolute;right:0;top:0;bottom:0;width:290px;background:rgba(0,4,8,.98);border-left:1px solid rgba(0,255,255,.1);display:flex;flex-direction:column;z-index:50;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+#ai-panel.open{transform:translateX(0)}
+.ai-panel-header{padding:.6rem .9rem;border-bottom:1px solid rgba(0,255,255,.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.ai-panel-title{font-family:'Orbitron',sans-serif;font-size:.6rem;color:var(--cyan);letter-spacing:.15em;display:flex;align-items:center;gap:.4rem}
+.ai-status-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:var(--glow-cyan);animation:blink 1.5s ease-in-out infinite}
+.ai-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:.8rem;transition:color .2s}
+.ai-close:hover{color:var(--red)}
+.ai-quick-btns{display:flex;gap:.3rem;flex-wrap:wrap;padding:.5rem .9rem;border-bottom:1px solid rgba(0,255,255,.05);flex-shrink:0}
+.ai-quick-btn{font-size:.5rem;color:var(--text3);border:1px solid var(--border);padding:.2rem .45rem;cursor:pointer;transition:all .2s;background:transparent;font-family:'Rajdhani',sans-serif;letter-spacing:.08em}
+.ai-quick-btn:hover{border-color:var(--cyan3);color:var(--cyan);background:rgba(0,255,255,.04)}
+.ai-messages{flex:1;padding:.7rem;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem;min-height:0}
+.ai-messages::-webkit-scrollbar{width:2px}
+.ai-messages::-webkit-scrollbar-thumb{background:#001122}
+.ai-msg{padding:.5rem .7rem;font-size:.68rem;line-height:1.7;position:relative}
+.ai-msg.bot{background:rgba(0,255,255,.03);border:1px solid rgba(0,255,255,.08);color:var(--text2)}
+.ai-msg.user{background:rgba(255,26,26,.03);border:1px solid rgba(255,26,26,.1);color:var(--text);text-align:right;align-self:flex-end;max-width:90%}
+.ai-msg.thinking{color:var(--text3);font-style:italic;animation:blink .7s step-end infinite}
+.ai-tag{font-size:.46rem;color:var(--cyan);letter-spacing:.3em;margin-bottom:.2rem;font-family:'Orbitron',sans-serif}
+.ai-input-row{display:flex;border-top:1px solid rgba(0,255,255,.08);flex-shrink:0}
+#ai-input{flex:1;background:transparent;border:none;outline:none;padding:.6rem .75rem;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--text);caret-color:var(--cyan);user-select:text}
+#ai-input::placeholder{color:var(--text3)}
+.ai-send{background:rgba(0,255,255,.06);border:none;border-left:1px solid rgba(0,255,255,.1);padding:.45rem .7rem;color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:.5rem;cursor:pointer;letter-spacing:.15em;transition:all .2s;flex-shrink:0}
+.ai-send:hover{background:rgba(0,255,255,.15)}
+
+/* ── OVERLAYS ────────────────────────────── */
+.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity .3s;background:rgba(0,0,0,.7)}
+.overlay.active{opacity:1;pointer-events:all}
+.feedback-box{padding:1.3rem 2.2rem;background:#050505;border:1px solid var(--border2);text-align:center;max-width:340px}
+.feedback-icon{font-size:2rem;margin-bottom:.25rem}
+.feedback-title{font-family:'Orbitron',sans-serif;font-size:1.2rem;color:var(--green);letter-spacing:.2em}
+.feedback-box.fail .feedback-title{color:var(--red)}
+.feedback-sub{margin:.35rem 0 0;font-size:.7rem;color:var(--text2)}
+.feedback-xp{font-family:'Orbitron',sans-serif;font-size:.8rem;color:var(--amber);margin-top:.5rem}
+.feedback-grade{font-family:'Orbitron',sans-serif;font-size:2rem;margin-top:.4rem}
+
+#success-overlay{background:rgba(0,0,0,.96)}
+.success-content{text-align:center;max-width:640px;padding:2rem;width:92%}
+.success-title{font-family:'Orbitron',sans-serif;font-size:clamp(2rem,6vw,4rem);color:var(--green);letter-spacing:.2em;animation:glowPulse 1s ease-in-out infinite}
+@keyframes glowPulse{0%,100%{text-shadow:0 0 30px var(--green)}50%{text-shadow:0 0 60px var(--green)}}
+.success-sub{font-family:'Rajdhani',sans-serif;font-size:.95rem;color:var(--cyan);letter-spacing:.4em;margin-top:.3rem}
+.final-grade-wrap{margin:1rem 0}
+.final-grade{font-family:'Orbitron',sans-serif;font-size:4rem;line-height:1;animation:gradePulse 1s ease-in-out infinite}
+@keyframes gradePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.grade-S{color:#ffd700;text-shadow:0 0 40px #ffd700}.grade-A{color:var(--cyan);text-shadow:0 0 40px var(--cyan)}.grade-B{color:var(--amber);text-shadow:0 0 30px var(--amber)}.grade-C{color:#ff8800}.grade-F{color:var(--red)}
+.success-stats{display:flex;gap:.8rem;justify-content:center;margin-top:1.2rem;flex-wrap:wrap}
+.sstat{text-align:center;padding:.8rem 1rem;border:1px solid var(--border);background:rgba(255,255,255,.02)}
+.sstat-val{font-family:'Orbitron',sans-serif;font-size:1.3rem;color:var(--amber)}
+.sstat-lbl{font-size:.52rem;color:var(--text2);letter-spacing:.2em;margin-top:.2rem}
+.success-actions{display:flex;gap:.7rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap}
+.succ-btn{font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.2em;padding:.7rem 1.6rem;cursor:pointer;transition:all .2s}
+.succ-btn.primary{background:rgba(0,255,65,.08);border:1px solid var(--green2);color:var(--green)}
+.succ-btn.primary:hover{background:rgba(0,255,65,.2)}
+.succ-btn.secondary{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.succ-btn.secondary:hover{border-color:var(--cyan3);color:var(--cyan)}
+
+/* ── EXPLOSION ───────────────────────────── */
+#explosion-overlay{position:absolute;inset:0;z-index:200;display:none}
+#exp-canvas{position:absolute;inset:0;width:100%;height:100%}
+.exp-ui{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.7rem;opacity:0;transition:opacity .8s;pointer-events:none}
+.exp-ui.visible{opacity:1;pointer-events:all}
+.exp-title{font-family:'Orbitron',sans-serif;font-size:clamp(2.5rem,7vw,5rem);color:#ff0000;letter-spacing:.15em;text-align:center;animation:expGlow .5s ease-in-out infinite}
+@keyframes expGlow{0%,100%{text-shadow:0 0 40px #ff0000}50%{text-shadow:0 0 80px #ff0000}}
+.exp-sub{font-family:'Rajdhani',sans-serif;font-size:.95rem;color:#cc2200;letter-spacing:.3em;text-align:center}
+.exp-fail-msg{font-size:.65rem;color:#441100;text-align:center;max-width:380px;line-height:1.7}
+.exp-actions{display:flex;gap:.7rem;margin-top:1rem;flex-wrap:wrap;justify-content:center}
+.exp-btn{font-family:'Orbitron',sans-serif;font-size:.62rem;letter-spacing:.18em;padding:.6rem 1.5rem;cursor:pointer;transition:all .2s}
+.exp-btn.retry{background:rgba(255,26,26,.08);border:1px solid var(--red3);color:var(--red)}
+.exp-btn.retry:hover{background:rgba(255,26,26,.2)}
+.exp-btn.menu{background:transparent;border:1px solid var(--border);color:var(--text2)}
+
+/* ── TOAST ───────────────────────────────── */
+#toast{position:fixed;top:1rem;right:1rem;z-index:300;transform:translateX(140%);transition:transform .4s cubic-bezier(.34,1.56,.64,1);max-width:270px}
+#toast.show{transform:translateX(0)}
+.toast-inner{background:#080808;border:1px solid var(--amber);padding:.7rem 1rem;display:flex;align-items:center;gap:.6rem;box-shadow:0 0 30px rgba(255,170,0,.1)}
+.toast-icon{font-size:1.2rem}
+.toast-title{font-family:'Orbitron',sans-serif;font-size:.55rem;color:var(--amber);letter-spacing:.15em}
+.toast-msg{font-size:.62rem;color:var(--text2);margin-top:.12rem}
+
+/* ── LEADERBOARD ─────────────────────────── */
+#leaderboard-modal{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(500px,92vw);background:#060606;border:1px solid var(--border2);z-index:60;padding:1.3rem;box-shadow:0 0 60px rgba(0,0,0,.9)}
+.lb-title{font-family:'Orbitron',sans-serif;font-size:.82rem;color:var(--amber);letter-spacing:.2em;text-align:center;margin-bottom:.9rem}
+.lb-row{display:flex;align-items:center;gap:.7rem;padding:.45rem .6rem;border-bottom:1px solid #080808;font-size:.68rem}
+.lb-rank{width:20px;font-family:'Orbitron',sans-serif;font-size:.62rem;color:var(--text2)}
+.lb-rank.g{color:#ffd700}.lb-rank.s{color:#c0c0c0}.lb-rank.b{color:#cd7f32}
+.lb-name{flex:1}.lb-score{font-family:'Orbitron',sans-serif;font-size:.65rem;color:var(--amber)}.lb-grade{font-family:'Orbitron',sans-serif;font-size:.6rem;margin-left:.3rem}
+.lb-close-row{text-align:center;margin-top:.9rem;cursor:pointer;font-size:.6rem;color:var(--text3);letter-spacing:.2em;transition:color .2s}
+.lb-close-row:hover{color:var(--red)}
+
+/* ── MISC ────────────────────────────────── */
+@keyframes shake{0%,100%{transform:translate(0)}15%,45%,75%{transform:translate(-5px,2px)}30%,60%,90%{transform:translate(5px,-2px)}}
+.shaking{animation:shake .5s ease}
+@keyframes redFlash{0%,100%{background:rgba(0,0,0,0)}50%{background:rgba(255,0,0,.1)}}
+.red-flash{animation:redFlash .5s ease}
+@keyframes greenFlash{0%,100%{background:rgba(0,0,0,0)}50%{background:rgba(0,255,65,.05)}}
+.green-flash{animation:greenFlash .4s ease}
+@keyframes cyanFlash{0%,100%{background:rgba(0,0,0,0)}50%{background:rgba(0,255,255,.06)}}
+.cyan-flash{animation:cyanFlash .4s ease}
+@keyframes stageIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.stage-transition{animation:stageIn .35s ease}
+.frozen-overlay{position:absolute;inset:0;pointer-events:none;z-index:5;background:rgba(0,200,255,.04);border:1px solid rgba(0,255,255,.12);display:none}
+.frozen-overlay.active{display:block}
+.heartbeat-bar{position:absolute;bottom:0;left:0;right:0;height:2px;background:transparent;overflow:hidden}
+.heartbeat-fill{height:100%;width:100%;transform-origin:left;animation:heartbeat 1s ease-in-out infinite;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+@keyframes heartbeat{0%{transform:scaleX(0);opacity:1}100%{transform:scaleX(1);opacity:0}}
+#code-editor,#ai-input{-webkit-user-select:text;-moz-user-select:text;user-select:text}
+@media(max-width:1000px){.bomb-panel{display:none}}
+@media(max-width:720px){.terminal-panel{display:none};.hud-stats{display:none}}
+</style>
+</head>
+<body oncontextmenu="return false">
+
+<div id="loading">
+  <div class="ld-logo">CODE <span>RED</span></div>
+  <div style="font-size:.6rem;color:#333;letter-spacing:.4em;margin-top:-.3rem">MULTI-LANGUAGE BOMB DEFUSION · v3.0</div>
+  <div class="ld-bar-wrap"><div class="ld-bar" id="ld-bar"></div></div>
+  <div class="ld-msg" id="ld-msg">INITIALIZING...</div>
+  <div class="ld-steps">
+    <div class="ld-step" id="ldstep-0"></div>
+    <div class="ld-step" id="ldstep-1"></div>
+    <div class="ld-step" id="ldstep-2"></div>
+    <div class="ld-step" id="ldstep-3"></div>
+    <div class="ld-step" id="ldstep-4"></div>
+  </div>
+</div>
+
+<canvas id="bg-canvas"></canvas>
+
+<div id="app">
+
+<!-- INTRO -->
+<div id="intro">
+  <div class="intro-grid"></div>
+  <button onclick="if(confirm('Return to Dashboard? Progress is auto-saved.'))window.location.href='dashboard.html'" style="position:absolute;top:14px;left:14px;z-index:50;background:rgba(0,0,0,0.7);border:1px solid rgba(255,170,0,0.3);color:var(--amber);padding:8px 14px;font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:.18em;cursor:pointer;">‹ DASHBOARD</button>
+  <div class="intro-content">
+    <div class="classified-tag">▶ CLASSIFIED — INTELLIGENCE DIVISION ALPHA ◀</div>
+    <div class="game-logo" data-text="CODE RED">CODE RED</div>
+    <div class="game-sub">Multi-Language Bomb Defusion Protocol</div>
+    <div class="season-tag">SEASON 1 · JS / C / C++ · 10 LEVELS · v3.0 ENHANCED</div>
+    <div class="warning-box">
+      <p>⚠ <span>WARNING:</span> AI PAYLOAD ARMED — CYBER NETWORK COMPROMISED ⚠</p>
+      <p style="margin-top:.3rem;font-size:.68rem;color:#aa0000">FIX THE CODE. DEFUSE THE BOMB. SAVE THE NETWORK.</p>
+    </div>
+
+    <!-- LANGUAGE SELECTOR -->
+    <div style="width:100%;max-width:740px;margin:.3rem 0">
+      <div style="font-size:.55rem;color:var(--text3);letter-spacing:.35em;text-align:center;margin-bottom:.5rem">SELECT PROGRAMMING LANGUAGE</div>
+      <div class="lang-selector">
+        <button class="lang-btn lang-js active" onclick="selectLang(this,'js')">
+          ◈ JavaScript<br><span style="font-size:.48rem;opacity:.7">Prototype / ES6+</span>
+        </button>
+        <button class="lang-btn lang-c" onclick="selectLang(this,'c')">
+          ⬡ C Language<br><span style="font-size:.48rem;opacity:.7">Systems / Memory</span>
+        </button>
+        <button class="lang-btn lang-cpp" onclick="selectLang(this,'cpp')">
+          ⬢ C++ Language<br><span style="font-size:.48rem;opacity:.7">OOP / STL / RAII</span>
+        </button>
+      </div>
+      <div id="lang-info" style="font-size:.58rem;color:var(--text3);letter-spacing:.12em;text-align:center;margin-top:.3rem;line-height:1.8"></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="intro-tabs">
+      <button class="itab active" onclick="switchTab(this,'tab-missions')">⬡ MISSIONS</button>
+      <button class="itab" onclick="switchTab(this,'tab-stats')">📊 STATS</button>
+    </div>
+
+    <div class="itab-panel active" id="tab-missions">
+      <div class="level-progress-section">
+        <div class="lps-title">MISSION PROGRESS — 10 LEVELS PER LANGUAGE</div>
+        <div class="level-grid" id="level-grid"></div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-val" id="si-defused">0</div><div class="stat-lbl">LEVELS DONE</div></div>
+        <div class="stat-box"><div class="stat-val" id="si-xp">0</div><div class="stat-lbl">TOTAL XP</div></div>
+        <div class="stat-box"><div class="stat-val" id="si-level">LVL 1</div><div class="stat-lbl">LEVEL</div></div>
+        <div class="stat-box"><div class="stat-val" id="si-lang">JS</div><div class="stat-lbl">LANGUAGE</div></div>
+      </div>
+    </div>
+
+    <div class="itab-panel" id="tab-stats">
+      <div id="stats-breakdown" style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.3rem"></div>
+    </div>
+
+    <div class="mode-label">SELECT MISSION MODE</div>
+    <div class="mode-row">
+      <button class="mode-btn active" onclick="selectMode(this,'solo')">⬡ SOLO<span class="mode-btn-sub">300s · x1.0 XP</span></button>
+      <button class="mode-btn" onclick="selectMode(this,'nightmare')">☠ NIGHTMARE<span class="mode-btn-sub">180s · x1.8 XP</span></button>
+      <button class="mode-btn" onclick="selectMode(this,'speed')">⚡ SPEED RUN<span class="mode-btn-sub">120s · x2.2 XP</span></button>
+    </div>
+    <button class="start-btn" onclick="showBriefing()">▶ INITIATE DEFUSION SEQUENCE</button>
+    <div class="lb-link" onclick="openLeaderboard()">▶ GLOBAL LEADERBOARD</div>
+  </div>
+</div>
+
+<!-- BRIEFING -->
+<div id="briefing-modal">
+  <div class="brief-box">
+    <div class="brief-corner tl"></div><div class="brief-corner tr"></div>
+    <div class="brief-corner bl"></div><div class="brief-corner br"></div>
+    <div class="brief-level" id="brief-level">LEVEL 1 / 10</div>
+    <div class="brief-title" id="brief-title">MISSION ALPHA</div>
+    <div class="brief-lore" id="brief-lore">Loading...</div>
+    <div class="brief-objectives">
+      <div class="brief-obj-title">MISSION OBJECTIVES</div>
+      <div id="brief-obj-list"></div>
+    </div>
+    <div class="brief-meta">
+      <div class="brief-meta-item"><div class="brief-meta-lbl">STAGES</div><div class="brief-meta-val" id="brief-stages">6</div></div>
+      <div class="brief-meta-item"><div class="brief-meta-lbl">TIME</div><div class="brief-meta-val" id="brief-time">5:00</div></div>
+      <div class="brief-meta-item"><div class="brief-meta-lbl">MODE</div><div class="brief-meta-val" id="brief-mode">SOLO</div></div>
+      <div class="brief-meta-item"><div class="brief-meta-lbl">LANGUAGE</div><div class="brief-meta-val" id="brief-lang">JS</div></div>
+      <div class="brief-meta-item"><div class="brief-meta-lbl">XP MUL</div><div class="brief-meta-val" id="brief-mul">x1.0</div></div>
+    </div>
+    <button class="brief-start" onclick="startGame()">▶ COMMENCE DEFUSION — GOOD LUCK, AGENT</button>
+    <div class="brief-countdown" id="brief-countdown">AUTO-START IN 30 SECONDS</div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <div class="hud-top">
+    <div class="hud-logo"><div class="hud-logo-dot"></div> CODE RED</div>
+    <div class="hud-lang" id="hud-lang">JS</div>
+    <div class="timer-wrap">
+      <div class="timer-lbl">TIME</div>
+      <div class="timer-display" id="timer">05:00</div>
+    </div>
+    <div class="danger-wrap">
+      <div class="danger-lbl">DANGER</div>
+      <div class="danger-bar-track"><div class="danger-bar-fill" id="danger-bar" style="width:10%"></div></div>
+    </div>
+    <div class="hud-powerups" id="hud-powerups">
+      <div class="hud-pu" id="pu-freeze" title="❄ Freeze Timer" onclick="usePowerup('freeze')">❄<div class="pu-cnt" id="pu-freeze-cnt">0</div></div>
+      <div class="hud-pu" id="pu-shield" title="🛡 Error Shield" onclick="usePowerup('shield')">🛡<div class="pu-cnt" id="pu-shield-cnt">0</div></div>
+      <div class="hud-pu" id="pu-hint" title="💡 Free Hint" onclick="usePowerup('hint')">💡<div class="pu-cnt" id="pu-hint-cnt">0</div></div>
+      <div class="hud-pu" id="pu-surge" title="⚡ XP Surge" onclick="usePowerup('surge')">⚡<div class="pu-cnt" id="pu-surge-cnt">0</div></div>
+    </div>
+    <div class="hud-stats">
+      <div class="hstat"><div class="hstat-val" id="h-xp">0</div><div class="hstat-lbl">XP</div></div>
+      <div class="hstat"><div class="hstat-val" id="h-combo">x1</div><div class="hstat-lbl">COMBO</div></div>
+      <div class="hstat"><div class="hstat-val" id="h-stage">1/6</div><div class="hstat-lbl">STAGE</div></div>
+    </div>
+    <div class="hud-btns">
+      <button class="hud-btn" id="pause-btn" onclick="togglePause()">▐▐</button>
+      <button class="hud-btn back-btn" onclick="returnToMenu()">◀ MENU</button>
+    </div>
+    <div class="heartbeat-bar"><div class="heartbeat-fill"></div></div>
+  </div>
+
+  <div class="game-main">
+    <div class="bomb-panel">
+      <div style="font-size:.48rem;color:var(--red);letter-spacing:.3em;text-align:center;animation:blink .8s step-end infinite">⚠ ARMED &amp; DANGEROUS ⚠</div>
+      <canvas id="bomb-canvas"></canvas>
+      <div class="bomb-level-tag" id="bomb-level-tag">LEVEL 1 / 10</div>
+      <div class="grade-display"><span class="grade-lbl">GRADE</span><span class="grade-val" id="live-grade">S</span></div>
+      <div class="wires-section">
+        <div class="wires-title">DETONATION WIRES</div>
+        <div class="wire-row"><span>W1</span><div class="wire" id="wire-1" style="background:#ff2222"></div></div>
+        <div class="wire-row"><span>W2</span><div class="wire" id="wire-2" style="background:#2255ff"></div></div>
+        <div class="wire-row"><span>W3</span><div class="wire" id="wire-3" style="background:#22ff44"></div></div>
+        <div class="wire-row"><span>W4</span><div class="wire" id="wire-4" style="background:#ffee22"></div></div>
+        <div class="wire-row"><span>W5</span><div class="wire" id="wire-5" style="background:#ff22ff"></div></div>
+        <div class="wire-row"><span>W6</span><div class="wire" id="wire-6" style="background:#22ffff"></div></div>
+      </div>
+      <div class="bomb-status"><div class="bomb-status-title">MISSION STATUS</div><div id="bomb-status-text">AI payload armed. Defusion required.</div></div>
+    </div>
+
+    <div class="code-panel">
+      <div class="stage-header">
+        <div class="stage-badge" id="stage-badge">STAGE 01</div>
+        <div class="stage-type-badge" id="stage-type">SYNTAX</div>
+        <div class="stage-lang-tag" id="stage-lang-tag">JS</div>
+        <div class="stage-title" id="stage-title">Loading...</div>
+        <div class="stage-pts" id="stage-pts">+500 XP</div>
+      </div>
+      <div class="editor-area">
+        <div class="challenge-desc" id="challenge-desc">Loading...</div>
+        <div class="editor-wrap">
+          <div class="line-nums" id="line-nums">1<br></div>
+          <div class="editor-container">
+            <div id="code-highlight" aria-hidden="true"></div>
+            <textarea id="code-editor" spellcheck="false" autocorrect="off" autocapitalize="off" placeholder="// Write your solution here..."></textarea>
+            <div class="frozen-overlay" id="frozen-overlay"></div>
+          </div>
+        </div>
+        <div class="editor-toolbar">
+          <button class="exec-btn" id="exec-btn" onclick="submitSolution()">▶ EXECUTE &amp; DEFUSE</button>
+          <button class="tool-btn ai-btn" onclick="toggleAI()">⬡ ASK AI</button>
+          <button class="tool-btn" onclick="toggleHint()">? HINT</button>
+          <button class="tool-btn" onclick="resetCode()">↺ RESET</button>
+          <div class="kbd-hint">CTRL+ENTER TO DEFUSE</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="terminal-panel">
+      <div class="term-header">
+        <div class="term-dot" style="background:#ff5f56"></div>
+        <div class="term-dot" style="background:#ffbd2e"></div>
+        <div class="term-dot" style="background:#27c93f"></div>
+        <div class="term-title">COMPILE_TERMINAL v3</div>
+      </div>
+      <div class="terminal-body" id="terminal"></div>
+      <div class="exec-result" id="exec-result" style="display:none">
+        <div class="exec-result-title">ANALYSIS OUTPUT</div>
+        <div id="exec-output"></div>
+      </div>
+      <div class="term-input-row">
+        <span style="font-size:.62rem;color:#003300;margin-right:.3rem">root@cr:~$</span>
+        <span class="term-cursor">▌</span>
+      </div>
+      <div class="stages-track" id="stages-track"></div>
+    </div>
+  </div>
+
+  <div class="hud-bottom">
+    <div class="xp-wrap">
+      <span class="xp-lbl">XP</span>
+      <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+      <span class="xp-text" id="xp-text">0/1000</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.35rem;font-size:.55rem;color:var(--text2)">
+      STREAK <span class="bottom-streak" id="streak-display">x1</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.4rem;font-size:.55rem;color:var(--text2)">
+      GRADE <span class="bottom-grade" id="bottom-grade">S</span>
+    </div>
+    <div class="bottom-mode" id="mode-display">SOLO DEFUSION</div>
+    <button class="abort-btn" onclick="returnToMenu()">◀ ABORT</button>
+  </div>
+
+  <div id="hint-box">
+    <button class="hint-close" onclick="toggleHint()">✕</button>
+    <div class="hint-title">⬡ TACTICAL HINT</div>
+    <div class="hint-text" id="hint-text">No hint available.</div>
+  </div>
+
+  <div id="ai-panel">
+    <div class="ai-panel-header">
+      <div class="ai-panel-title"><div class="ai-status-dot"></div> AI BOMB ADVISOR</div>
+      <button class="ai-close" onclick="toggleAI()">✕</button>
+    </div>
+    <div class="ai-quick-btns">
+      <button class="ai-quick-btn" onclick="aiQuick('What concept is being tested?')">What concept?</button>
+      <button class="ai-quick-btn" onclick="aiQuick('What is wrong with the current code?')">What is wrong?</button>
+      <button class="ai-quick-btn" onclick="aiQuick('Give me a small nudge.')">Nudge me</button>
+      <button class="ai-quick-btn" onclick="aiQuick('Explain the syntax error.')">Explain error</button>
+    </div>
+    <div class="ai-messages" id="ai-messages">
+      <div class="ai-msg bot"><div class="ai-tag">CLAUDE AI</div>Agent, I'm your AI advisor. I'll guide you without spoiling the solution. Ask anything!</div>
+    </div>
+    <div class="ai-input-row">
+      <input type="text" id="ai-input" placeholder="Ask about the challenge..." onkeydown="if(event.key==='Enter')sendAI()">
+      <button class="ai-send" onclick="sendAI()">SEND</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="feedback-overlay">
+  <div class="feedback-box" id="feedback-box">
+    <div class="feedback-icon" id="fb-icon">✓</div>
+    <div class="feedback-title" id="fb-title">CORRECT</div>
+    <div class="feedback-sub" id="fb-sub">Stage defused successfully.</div>
+    <div class="feedback-xp" id="fb-xp">+500 XP</div>
+    <div class="feedback-grade" id="fb-grade"></div>
+  </div>
+</div>
+
+<div class="overlay" id="success-overlay">
+  <div class="success-content">
+    <div class="success-title">DEFUSED</div>
+    <div class="success-sub">BOMB NEUTRALIZED — NETWORK SECURED</div>
+    <div class="final-grade-wrap">
+      <div class="final-grade" id="final-grade">S</div>
+      <div style="font-size:.6rem;color:var(--text3);letter-spacing:.3em;margin-top:.3rem" id="grade-desc">PERFECT MISSION</div>
+    </div>
+    <div id="success-stats" class="success-stats"></div>
+    <div class="success-actions">
+      <button class="succ-btn primary" onclick="nextLevel()">▶ NEXT LEVEL</button>
+      <button class="succ-btn secondary" onclick="returnToMenu()">◀ MENU</button>
+    </div>
+  </div>
+</div>
+
+<div id="explosion-overlay">
+  <canvas id="exp-canvas"></canvas>
+  <div class="exp-ui" id="exp-ui">
+    <div style="font-size:.6rem;color:#ff4400;letter-spacing:.5em;animation:blink .35s step-end infinite">⚠ DETONATION ⚠</div>
+    <div class="exp-title">BOOM</div>
+    <div class="exp-sub">MISSION FAILED — NETWORK COMPROMISED</div>
+    <div class="exp-fail-msg" id="exp-fail-msg"></div>
+    <div class="exp-actions">
+      <button class="exp-btn retry" onclick="showBriefing()">↺ RETRY</button>
+      <button class="exp-btn menu" onclick="returnToMenu()">◀ MENU</button>
+    </div>
+  </div>
+</div>
+
+<div id="leaderboard-modal">
+  <div class="lb-title">🏆 GLOBAL LEADERBOARD</div>
+  <div id="lb-rows"></div>
+  <div class="lb-close-row" onclick="closeLeaderboard()">▼ CLOSE</div>
+</div>
+
+<div id="toast">
+  <div class="toast-inner">
+    <div class="toast-icon" id="toast-icon">🏆</div>
+    <div><div class="toast-title" id="toast-title">ACHIEVEMENT</div><div class="toast-msg" id="toast-msg"></div></div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ══════════════════════════════════════════════════════
+   LANGUAGE INFO
+══════════════════════════════════════════════════════ */
+const LANG_INFO = {
+  js:  { label:'JavaScript', color:'#f7df1e', cls:'js',  desc:'Dynamic typing · Prototype-based OOP · Event-driven · ES6+ features' },
+  c:   { label:'C Language', color:'#a8b9cc', cls:'c',   desc:'Manual memory management · Pointers · Structs · System programming · K&R syntax' },
+  cpp: { label:'C++',        color:'#5599ff', cls:'cpp', desc:'OOP Classes · Templates · STL · RAII · Smart pointers · std::vector / map' },
+};
+
+/* ══════════════════════════════════════════════════════
+   LEVEL BRIEFINGS
+══════════════════════════════════════════════════════ */
+const LEVEL_BRIEFINGS = {
+  js: [
+    {title:'OPERATION ALPHA',lore:'A rogue AI has embedded syntax errors across our JavaScript control systems. Fix the core function declarations before the timer runs out.',objectives:['Fix broken function syntax','Correct inverted logic conditions','Add missing return statements']},
+    {title:'OPERATION LOOPHOLE',lore:'Recursive loops are spiraling out of control. Off-by-one errors and infinite cycles threaten to consume all resources.',objectives:['Fix for loops with correct indices','Terminate infinite while loops','Calculate loop output values']},
+    {title:'OPERATION SCOPE',lore:'Variable containment breaches threaten to corrupt system memory. Misscoped variables are leaking sensitive data.',objectives:['Resolve variable scope conflicts','Fix assignment vs comparison bugs','Calculate complex expressions']},
+    {title:'OPERATION ARRAY',lore:'The weapons array manifest has been corrupted. Off-by-one index errors and wrong method calls prevent inventory access.',objectives:['Use correct array access patterns','Replace filter() with find()','Calculate reduce() values']},
+    {title:'OPERATION PAYLOAD',lore:'Enemy payload objects have been restructured. Nested property accesses are failing and destructuring is broken.',objectives:['Fix nested object property access','Restore broken destructuring','Predict Object.values() results']},
+    {title:'OPERATION ASYNC',lore:'Async defusal routines are deadlocking — await keywords stripped and error handlers removed.',objectives:['Restore missing await keywords','Add .catch() error handlers','Understand async execution order']},
+    {title:'OPERATION SAFEGUARD',lore:'Critical safety checks disabled. JSON parsers crash on malformed data.',objectives:['Wrap code in try/catch','Convert string throws to Error objects','Understand typeof on errors']},
+    {title:'OPERATION CONSTRUCT',lore:'Class blueprints for AI units corrupted. Constructors missing and subclasses fail to call parent initializers.',objectives:['Rebuild missing class constructors','Fix super() call ordering','Trace class method execution']},
+    {title:'OPERATION CLOSURE',lore:'Advanced closure traps deployed. The var/let timing attack executing.',objectives:['Replace var with let in loops','Complete curried functions','Add base cases to recursive functions']},
+    {title:'OPERATION BLACKOUT',lore:'FINAL JS MISSION: The AI core uses advanced obfuscation — base64 payloads, generators, and Proxy interceptors.',objectives:['Decode base64 kill-switch keys','Complete generator yield sequences','Implement Proxy get traps']},
+  ],
+  c: [
+    {title:'C-OPS: SYNTAX STRIKE',lore:'The embedded C firmware has been sabotaged with deliberate syntax errors. Main entry points are corrupted. Restore the core system.',objectives:['Fix broken function signatures','Correct missing semicolons and braces','Add missing return types']},
+    {title:'C-OPS: POINTER BREACH',lore:'Memory pointer chains have been corrupted. Null dereferencing and dangling pointers threaten system stability.',objectives:['Fix pointer declarations and usage','Correct NULL pointer checks','Use * and & operators correctly']},
+    {title:'C-OPS: MEMORY LEAK',lore:'Dynamic memory allocation is leaking. malloc() calls are unmatched with free() and buffer sizes are miscalculated.',objectives:['Match malloc() with free()','Calculate correct buffer sizes','Fix sizeof() usage']},
+    {title:'C-OPS: STRUCT ATTACK',lore:'Data structures defining bomb components have corrupt field access patterns and wrong typedef syntax.',objectives:['Fix struct member access with . and ->','Correct typedef struct declarations','Access nested struct fields correctly']},
+    {title:'C-OPS: ARRAY OVERFLOW',lore:'C array bounds are being violated. Off-by-one errors and wrong index calculations threaten buffer overflows.',objectives:['Fix array bounds (0-indexed)','Calculate correct array sizes','Use proper array-to-pointer decay']},
+    {title:'C-OPS: STRING OPS',lore:'C string operations are broken. strcpy, strcmp, and strlen are being used incorrectly on char arrays.',objectives:['Fix strcpy and strncpy usage','Correct strcmp return value interpretation','Proper null terminator handling']},
+    {title:'C-OPS: PREPROCESSOR',lore:'The C preprocessor directives have been tampered with. Macro definitions and include guards are broken.',objectives:['Fix #define macro syntax','Correct #include paths','Add missing header guards']},
+    {title:'C-OPS: BITFIELD',lore:'Bit manipulation routines are corrupted. Bitwise operators are miscombined and bit shift values are wrong.',objectives:['Fix bitwise AND/OR/XOR operations','Correct bit shift amounts','Use bitmasks properly']},
+    {title:'C-OPS: FILE OPS',lore:'File I/O routines are broken. fopen modes are wrong and fread/fwrite call signatures are incorrect.',objectives:['Fix fopen mode strings','Correct fread/fwrite parameters','Handle EOF detection properly']},
+    {title:'C-OPS: FINAL PROTOCOL',lore:'FINAL C MISSION: The kernel module uses function pointers, va_args, and recursive algorithms — all corrupted.',objectives:['Fix function pointer declarations','Correct va_list usage','Complete recursive algorithms']},
+  ],
+  cpp: [
+    {title:'CPP-OPS: CLASS BREACH',lore:'C++ class blueprints for the AI defense grid are corrupted. Constructors, access specifiers, and method definitions are broken.',objectives:['Fix class constructor syntax','Correct public/private access modifiers','Add missing method implementations']},
+    {title:'CPP-OPS: STL STRIKE',lore:'Standard Template Library containers have been sabotaged. Vector push_back, map insertion, and iterator usage are wrong.',objectives:['Fix std::vector operations','Correct std::map key-value access','Use iterators properly with begin/end']},
+    {title:'CPP-OPS: INHERITANCE',lore:'Class inheritance chains are broken. Virtual functions missing override keywords and base constructors not called.',objectives:['Fix virtual function declarations','Add override keyword correctly','Call base class constructors properly']},
+    {title:'CPP-OPS: TEMPLATES',lore:'Function and class templates have corrupted syntax. Template parameter declarations and specializations are broken.',objectives:['Fix template<typename T> syntax','Correct template function calls','Handle template specialization']},
+    {title:'CPP-OPS: SMARTPTR',lore:'Smart pointer usage is corrupted. unique_ptr, shared_ptr ownership and move semantics are broken.',objectives:['Fix unique_ptr and shared_ptr','Correct std::move usage','Handle pointer ownership transfer']},
+    {title:'CPP-OPS: OPERATOR',lore:'Operator overloading definitions are broken. The + and == operators have wrong signatures.',objectives:['Fix operator overload signatures','Return correct types from operators','Implement comparison operators']},
+    {title:'CPP-OPS: EXCEPTION',lore:'Exception handling chains are broken. throw statements throw wrong types and catch blocks have wrong exception types.',objectives:['Fix throw expression types','Correct catch(exception type)','Use std::runtime_error properly']},
+    {title:'CPP-OPS: LAMBDA',lore:'Lambda functions used in STL algorithms are corrupted. Capture lists and parameter syntax are broken.',objectives:['Fix lambda capture lists [&] [=]','Correct lambda parameter syntax','Use lambdas with std::sort/find_if']},
+    {title:'CPP-OPS: RAII',lore:'Resource Acquisition Is Initialization patterns are broken. Destructors leak resources and copy constructors are wrong.',objectives:['Fix destructor resource cleanup','Implement copy constructor correctly','Use RAII for file and memory handles']},
+    {title:'CPP-OPS: FINAL OMEGA',lore:'FINAL C++ MISSION: The AI core uses variadic templates, move semantics, and constexpr — all corrupted.',objectives:['Fix variadic template packs','Correct std::move and std::forward','Implement constexpr functions']},
+  ],
+};
+
+/* ══════════════════════════════════════════════════════
+   JAVASCRIPT CHALLENGES (Levels 1-10, 3 per level)
+══════════════════════════════════════════════════════ */
+const JS_CHALLENGES = [
+  // LEVEL 1
+  {id:'L1A',lang:'JS',lvl:1,title:'FIX: SYNTAX BREACH',type:'SYNTAX',points:400,
+   desc:'<span class="err-tag">SYNTAX ERROR:</span> The override function is missing a closing parenthesis in its signature.',
+   code:`function disarmBomb( {\n  let code = "ALPHA-9-OVERRIDE";\n  return code;\n}`,
+   hint:'A function signature needs opening AND closing parentheses before the {.',
+   check:c=>{const r=c.replace(/\s/g,'');return r.includes('disarmBomb()')||r.includes('disarmBomb(){');}},
+  {id:'L1B',lang:'JS',lvl:1,title:'DEBUG: INVERTED LOGIC',type:'LOGIC',points:500,
+   desc:'<span class="err-tag">CRITICAL:</span> The safety check returns "BOMB DISARMED" for the <span class="hint-tag">wrong</span> code. Fix the comparison operator.',
+   code:`function safetyCheck(code) {\n  if (code !== "DEFUSE_9X") {\n    return "BOMB DISARMED";\n  }\n  return "ARMED";\n}`,
+   hint:'Change !== to === so the correct code triggers "BOMB DISARMED".',
+   check:c=>c.includes('===')&&!c.replace(/\/\/.*/g,'').includes('!==')},
+  {id:'L1C',lang:'JS',lvl:1,title:'COMPLETE: MISSING RETURN',type:'COMPLETE',points:450,
+   desc:'<span class="err-tag">MISSING:</span> The disarm key is calculated but never returned. Add the missing return statement.',
+   code:`function getDisarmCode() {\n  const base = 1000;\n  const key = base * 7 + 42;\n  // Missing return here\n}`,
+   hint:'Add: return key; before the closing brace.',
+   check:c=>c.includes('return key')},
+  // LEVEL 2
+  {id:'L2A',lang:'JS',lvl:2,title:'COMPLETE: BROKEN FOR LOOP',type:'COMPLETE',points:600,
+   desc:'<span class="err-tag">MISSING CODE:</span> Fill in the blank values so the loop iterates through all <span class="hint-tag">6</span> layers (indices 0–5).',
+   code:`function deactivateLayers() {\n  let layers = [1,2,3,4,5,6];\n  let result = [];\n  for (let i = ___; i < ___; i++) {\n    result.push(layers[i]);\n  }\n  return result.length === 6;\n}`,
+   hint:'Arrays are 0-indexed. Start at 0, run while i < 6.',
+   check:c=>{const r=c.replace(/\s/g,'');return r.includes('i=0')&&(r.includes('i<6')||r.includes('i<layers.length'));}},
+  {id:'L2B',lang:'JS',lvl:2,title:'FIX: INFINITE LOOP BOMB',type:'LOGIC',points:700,
+   desc:'<span class="err-tag">CRITICAL:</span> This while loop never terminates. The counter is never decremented. Fix it.',
+   code:`function countdown(n) {\n  let result = [];\n  let i = n;\n  while (i > 0) {\n    result.push(i);\n    // Missing decrement!\n  }\n  return result;\n}`,
+   hint:'Add i--; inside the loop body so it eventually terminates.',
+   check:c=>c.includes('i--')||c.includes('i = i - 1')},
+  {id:'L2C',lang:'JS',lvl:2,title:'PREDICT: LOOP SUM',type:'OUTPUT',points:550,
+   desc:'<span class="err-tag">ANALYSIS:</span> What is the final value of <span class="hint-tag">sum</span>? Type ONLY the number.',
+   code:`let sum = 0;\nfor (let i = 1; i <= 5; i++) {\n  sum += i;\n}\n// Type the final value of sum:`,
+   hint:'1+2+3+4+5 = 15',
+   check:c=>c.trim().replace(/;$/,'')==='15'},
+  // LEVEL 3
+  {id:'L3A',lang:'JS',lvl:3,title:'FIX: SCOPE LEAK',type:'SCOPE',points:750,
+   desc:'<span class="err-tag">SCOPE ERROR:</span> Variable <span class="hint-tag">count</span> declared inside the if block is inaccessible in the return statement.',
+   code:`function countDown(start) {\n  if (start > 0) {\n    let count = start;\n  }\n  return count; // ReferenceError!\n}`,
+   hint:'Move "let count = start;" outside the if block.',
+   check:c=>{const ln=c.split('\n');const di=ln.findIndex(l=>l.includes('let count'));const ii=ln.findIndex(l=>l.trim().startsWith('if'));return di<ii&&di>=0;}},
+  {id:'L3B',lang:'JS',lvl:3,title:'FIX: ASSIGNMENT vs COMPARE',type:'LOGIC',points:800,
+   desc:'<span class="err-tag">BUG:</span> The pin validator always returns true — it uses assignment <span class="hint-tag">=</span> instead of comparison.',
+   code:`function validatePin(pin) {\n  const str = String(pin);\n  if (str.length = 4) { // Bug!\n    return true;\n  }\n  return false;\n}`,
+   hint:'Replace = with === for strict equality comparison.',
+   check:c=>c.includes('length === 4')||c.includes('length==4')},
+  {id:'L3C',lang:'JS',lvl:3,title:'PREDICT: EXPRESSION',type:'OUTPUT',points:650,
+   desc:'<span class="err-tag">ANALYSIS:</span> What does <span class="hint-tag">result</span> equal? Type ONLY the number.',
+   code:`let x = 10;\nlet y = 3;\nlet result = x % y + Math.floor(x / y) * 2;\n// Type the value of result:`,
+   hint:'10%3=1, Math.floor(10/3)=3, so 1+(3*2)=7',
+   check:c=>c.trim().replace(/;$/,'')==='7'},
+  // LEVEL 4
+  {id:'L4A',lang:'JS',lvl:4,title:'FIX: WRONG ARRAY METHOD',type:'ARRAY',points:900,
+   desc:'<span class="err-tag">ERROR:</span> <span class="hint-tag">filter()</span> returns an array. You need a single object — use <span class="hint-tag">find()</span> instead.',
+   code:`const wires = [{id:1,color:'red'},{id:2,color:'blue'}];\nconst target = wires.filter(w => w.id === 1);\n// target should be the object itself, not an array`,
+   hint:'Replace .filter( with .find( — find returns the first matching element.',
+   check:c=>c.includes('.find(')&&!c.includes('.filter(')},
+  {id:'L4B',lang:'JS',lvl:4,title:'FIX: OFF-BY-ONE INDEX',type:'ARRAY',points:850,
+   desc:'<span class="err-tag">BUG:</span> This code accesses index <span class="hint-tag">length</span> which is out of bounds. Fix to get the last element.',
+   code:`const codes = ["ALPHA","BETA","GAMMA","DELTA"];\nconst lastCode = codes[codes.length]; // undefined!\n// lastCode should be "DELTA"`,
+   hint:'Arrays are 0-indexed — the last element is at index length-1.',
+   check:c=>c.includes('codes.length - 1')||c.includes('codes.length-1')||c.includes('codes[3]')},
+  {id:'L4C',lang:'JS',lvl:4,title:'PREDICT: REDUCE SUM',type:'OUTPUT',points:750,
+   desc:'<span class="err-tag">ANALYSIS:</span> What does <span class="hint-tag">result</span> equal? Type ONLY the number.',
+   code:`const arr = [10, 20, 30, 40, 50];\nconst result = arr.reduce((acc, val) => acc + val, 0);\n// Type the value of result:`,
+   hint:'Sum all elements: 10+20+30+40+50=150',
+   check:c=>c.trim().replace(/;$/,'')==='150'},
+  // LEVEL 5
+  {id:'L5A',lang:'JS',lvl:5,title:'FIX: NESTED PROPERTY',type:'OBJECT',points:1000,
+   desc:'<span class="err-tag">ERROR:</span> <span class="hint-tag">bomb.armed</span> is undefined — the property is nested inside <span class="hint-tag">core</span>.',
+   code:`const bomb = { core: { timer: 30, armed: true } };\nconst isArmed = bomb.armed; // undefined!\n// isArmed should be true`,
+   hint:'Use bomb.core.armed to access the nested property.',
+   check:c=>c.includes('bomb.core.armed')},
+  {id:'L5B',lang:'JS',lvl:5,title:'FIX: DESTRUCTURING',type:'OBJECT',points:950,
+   desc:'<span class="err-tag">FAULT:</span> Fix the destructuring to extract <span class="hint-tag">code</span> and <span class="hint-tag">timer</span> from the payload.',
+   code:`const payload = { code: "RED-9", timer: 45, level: 3 };\nconst { ___,  ___ } = payload;\nconsole.log(code, timer);`,
+   hint:'Replace ___ with: { code, timer }',
+   check:c=>{const r=c.replace(/\s/g,'');return r.includes('{code,timer}=')||r.includes('{timer,code}=');}},
+  {id:'L5C',lang:'JS',lvl:5,title:'PREDICT: OBJECT REDUCE',type:'OUTPUT',points:850,
+   desc:'<span class="err-tag">ANALYSIS:</span> What is the value of <span class="hint-tag">result</span>? Type ONLY the number.',
+   code:`const obj = { a: 5, b: 3 };\nconst result = Object.values(obj).reduce((s, v) => s * v, 1);\n// Type the value of result:`,
+   hint:'Object.values gives [5,3], multiply: 1*5*3=15',
+   check:c=>c.trim().replace(/;$/,'')==='15'},
+  // LEVEL 6
+  {id:'L6A',lang:'JS',lvl:6,title:'FIX: MISSING AWAIT',type:'ASYNC',points:1200,
+   desc:'<span class="err-tag">FAULT:</span> Two Promise calls are missing <span class="hint-tag">await</span> — add them before both <span class="hint-tag">fetch</span> and <span class="hint-tag">response.json()</span>.',
+   code:`async function emergencyDeactivate() {\n  const response = fetch('/api/override');\n  const data = response.json();\n  if (data.status === "CLEAR") return "BOMB DEFUSED";\n}`,
+   hint:'Add "await" before fetch() and before response.json().',
+   check:c=>{const ln=c.split('\n');return ln.some(l=>l.includes('await fetch'))&&ln.some(l=>l.includes('await response.json'));}},
+  {id:'L6B',lang:'JS',lvl:6,title:'FIX: MISSING CATCH',type:'ASYNC',points:1100,
+   desc:'<span class="err-tag">ERROR:</span> This promise chain has no error handler. Add a <span class="hint-tag">.catch()</span> at the end.',
+   code:`fetch('/api/bomb-status')\n  .then(res => res.json())\n  .then(data => console.log(data));\n  // Missing error handling!`,
+   hint:'Add .catch(err => console.error(err)) at the end.',
+   check:c=>c.includes('.catch(')},
+  {id:'L6C',lang:'JS',lvl:6,title:'PREDICT: ASYNC ORDER',type:'OUTPUT',points:1000,
+   desc:'<span class="err-tag">ANALYSIS:</span> What number is logged THIRD? Order: 1, 4, ___, 2. Type ONLY the number.',
+   code:`console.log(1);\nsetTimeout(() => console.log(2), 0);\nPromise.resolve().then(() => console.log(3));\nconsole.log(4);\n// Output order: 1, 4, ___, 2. Third number?`,
+   hint:'Microtasks (Promises) run before macrotasks (setTimeout). Order: 1,4,3,2.',
+   check:c=>c.trim().replace(/;$/,'')==='3'},
+  // LEVEL 7
+  {id:'L7A',lang:'JS',lvl:7,title:'FIX: ADD TRY-CATCH',type:'ERROR',points:1300,
+   desc:'<span class="err-tag">MISSING:</span> Wrap the JSON.parse in a <span class="hint-tag">try/catch</span> block and return null on failure.',
+   code:`function parsePayload(str) {\n  const data = JSON.parse(str);\n  return data;\n  // Crashes on invalid JSON!\n}`,
+   hint:'Wrap in try { ... } catch(e) { return null; }',
+   check:c=>(c.includes('try{')&&c.includes('catch'))||(c.includes('try {')&&c.includes('catch'))},
+  {id:'L7B',lang:'JS',lvl:7,title:'FIX: THROW ERROR OBJECT',type:'ERROR',points:1200,
+   desc:'<span class="err-tag">BUG:</span> Throwing a plain string loses the stack trace. Throw a proper <span class="hint-tag">Error object</span> instead.',
+   code:`function validateCode(code) {\n  if (!code) {\n    throw "Code required"; // Wrong!\n  }\n  return true;\n}`,
+   hint:'Replace "Code required" with new Error("Code required")',
+   check:c=>c.includes('throw new Error(')},
+  {id:'L7C',lang:'JS',lvl:7,title:'PREDICT: TYPEOF ERROR',type:'OUTPUT',points:1050,
+   desc:'<span class="err-tag">ANALYSIS:</span> What does <span class="hint-tag">typeof e</span> output? Type ONLY the word.',
+   code:`try {\n  null.property;\n} catch(e) {\n  console.log(typeof e);\n}\n// Type only the output word:`,
+   hint:'Errors are objects. typeof an Error instance is "object".',
+   check:c=>c.trim().toLowerCase()==='object'},
+  // LEVEL 8
+  {id:'L8A',lang:'JS',lvl:8,title:'FIX: MISSING CONSTRUCTOR',type:'CLASS',points:1400,
+   desc:'<span class="err-tag">ERROR:</span> The Bomb class has no constructor. Add one that sets <span class="hint-tag">this.code</span> and <span class="hint-tag">this.armed</span>.',
+   code:`class Bomb {\n  // Missing constructor!\n  defuse() {\n    this.armed = false;\n    return "DEFUSED: " + this.code;\n  }\n}\nconst b = new Bomb("ALPHA-9", true);`,
+   hint:'Add: constructor(code, armed) { this.code = code; this.armed = armed; }',
+   check:c=>c.includes('constructor(')&&c.includes('this.code')&&c.includes('this.armed')},
+  {id:'L8B',lang:'JS',lvl:8,title:'FIX: SUPER() ORDER',type:'CLASS',points:1350,
+   desc:'<span class="err-tag">ERROR:</span> <span class="hint-tag">super()</span> must be called BEFORE any use of <span class="hint-tag">this</span> in a subclass constructor.',
+   code:`class SmartBomb extends Bomb {\n  constructor(code, armed, aiLevel) {\n    this.aiLevel = aiLevel; // ReferenceError!\n    super(code, armed);\n  }\n}`,
+   hint:'Move super(code, armed); to be the FIRST line in the constructor.',
+   check:c=>{const ln=c.split('\n').map(l=>l.trim());const si=ln.findIndex(l=>l.startsWith('super('));const ti=ln.findIndex(l=>l.startsWith('this.'));return si<ti&&si>=0;}},
+  {id:'L8C',lang:'JS',lvl:8,title:'PREDICT: CLASS COUNTER',type:'OUTPUT',points:1200,
+   desc:'<span class="err-tag">ANALYSIS:</span> What does <span class="hint-tag">c.n</span> log? Type ONLY the number.',
+   code:`class Counter {\n  constructor() { this.n = 0; }\n  inc() { this.n++; }\n}\nconst c = new Counter();\nc.inc(); c.inc(); c.inc();\nconsole.log(c.n);\n// Type the logged value:`,
+   hint:'inc() is called 3 times starting from 0.',
+   check:c=>c.trim().replace(/;$/,'')==='3'},
+  // LEVEL 9
+  {id:'L9A',lang:'JS',lvl:9,title:'FIX: CLOSURE VAR BUG',type:'CLOSURE',points:1600,
+   desc:'<span class="err-tag">CLOSURE BUG:</span> All callbacks log <span class="hint-tag">3</span> due to var sharing. Use <span class="hint-tag">let</span> to create per-iteration scope.',
+   code:`for (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 100);\n}\n// Currently logs: 3, 3, 3\n// Should log: 0, 1, 2`,
+   hint:'Replace "var" with "let" — let creates a new binding each iteration.',
+   check:c=>c.includes('for (let i')||c.includes('for(let i')},
+  {id:'L9B',lang:'JS',lvl:9,title:'FIX: CURRIED FUNCTION',type:'FUNCTIONAL',points:1500,
+   desc:'<span class="err-tag">INCOMPLETE:</span> Complete the curried function so <span class="hint-tag">add(2)(3)</span> returns <span class="hint-tag">5</span>.',
+   code:`function add(a) {\n  // Complete so add(2)(3) === 5\n}`,
+   hint:'Return a function: return (b) => a + b;',
+   check:c=>(c.includes('return(')&&c.includes('=>'))||(c.includes('return ('))||(c.includes('return function'))},
+  {id:'L9C',lang:'JS',lvl:9,title:'FIX: MISSING BASE CASE',type:'RECURSION',points:1700,
+   desc:'<span class="err-tag">INFINITE RECURSION:</span> The factorial function is missing its <span class="hint-tag">base case</span>. Add it as the first line.',
+   code:`function factorial(n) {\n  // Add base case here!\n  return n * factorial(n - 1);\n}`,
+   hint:'Add: if (n <= 1) return 1; as the first line.',
+   check:c=>c.includes('if(n<=1)')||c.includes('if (n <= 1)')||c.includes('if(n<2)')||c.includes('if (n < 2)')},
+  // LEVEL 10
+  {id:'L10A',lang:'JS',lvl:10,title:'DECODE: BASE64 PAYLOAD',type:'DECRYPT',points:2000,
+   desc:'<span class="err-tag">ENCRYPTED:</span> The kill-switch key is base64-encoded. Use <span class="hint-tag">atob()</span> to decode and return it.',
+   code:`function getOverrideKey() {\n  const encoded = "REVGVVNF";\n  // Decode the base64 string and return it:\n  \n}`,
+   hint:'atob() decodes base64. Write: return atob(encoded);',
+   check:c=>c.includes('atob')&&c.includes('return')},
+  {id:'L10B',lang:'JS',lvl:10,title:'FIX: GENERATOR SEQUENCE',type:'ADVANCED',points:1900,
+   desc:'<span class="err-tag">BROKEN:</span> The bomb sequencer generator is empty. Add three <span class="hint-tag">yield</span> statements for values 1, 2, 3.',
+   code:`function* bombSequence() {\n  // Add: yield 1; yield 2; yield 3;\n}`,
+   hint:'Use: yield 1; yield 2; yield 3; inside the generator.',
+   check:c=>c.includes('yield 1')&&c.includes('yield 2')&&c.includes('yield 3')},
+  {id:'L10C',lang:'JS',lvl:10,title:'FIX: PROXY TRAP',type:'ADVANCED',points:1800,
+   desc:'<span class="err-tag">FINAL:</span> Implement a <span class="hint-tag">get</span> trap that returns 0 for any undefined property.',
+   code:`const handler = {\n  // Implement get trap:\n};\nconst safe = new Proxy({armed: true}, handler);`,
+   hint:'Add: get(target, key) { return key in target ? target[key] : 0; }',
+   check:c=>c.includes('get(target')&&(c.includes('target[key]')||c.includes('target[prop]'))},
+];
+
+/* ══════════════════════════════════════════════════════
+   C CHALLENGES (Levels 1-10, 3 per level)
+══════════════════════════════════════════════════════ */
+const C_CHALLENGES = [
+  // LEVEL 1: Syntax
+  {id:'C1A',lang:'C',lvl:1,title:'FIX: MISSING RETURN TYPE',type:'SYNTAX',points:400,
+   desc:'<span class="err-tag">SYNTAX ERROR:</span> The function <span class="hint-tag">disarm</span> is missing its return type. C requires explicit return types.',
+   code:`#include <stdio.h>\n\ndisarm(int code) {\n    printf("Disarming: %d\\n", code);\n    return 1;\n}`,
+   hint:'Add "int" before the function name: int disarm(int code)',
+   check:c=>c.includes('int disarm(')},
+  {id:'C1B',lang:'C',lvl:1,title:'FIX: MISSING SEMICOLON',type:'SYNTAX',points:350,
+   desc:'<span class="err-tag">SYNTAX ERROR:</span> One of the statements is missing a semicolon. Find and fix it.',
+   code:`#include <stdio.h>\n\nint main() {\n    int code = 9\n    int armed = 1;\n    printf("Code: %d\\n", code);\n    return 0;\n}`,
+   hint:'Every C statement ends with a semicolon. "int code = 9" is missing one.',
+   check:c=>c.includes('int code = 9;')},
+  {id:'C1C',lang:'C',lvl:1,title:'PREDICT: PRINTF OUTPUT',type:'OUTPUT',points:450,
+   desc:'<span class="err-tag">ANALYSIS:</span> What number does printf output? Type ONLY the number.',
+   code:`#include <stdio.h>\nint main() {\n    int x = 5;\n    int y = 3;\n    printf("%d", x * y - 2);\n    return 0;\n}\n// Type the printed number:`,
+   hint:'5 * 3 = 15, then 15 - 2 = 13',
+   check:c=>c.trim().replace(/;$/,'')==='13'},
+  // LEVEL 2: Pointers
+  {id:'C2A',lang:'C',lvl:2,title:'FIX: NULL POINTER DEREFERENCE',type:'POINTER',points:600,
+   desc:'<span class="err-tag">CRASH RISK:</span> This code dereferences a pointer without checking if it is <span class="hint-tag">NULL</span>. Add a NULL check before dereferencing.',
+   code:`#include <stdio.h>\n\nint getValue(int *ptr) {\n    return *ptr;  // Crashes if ptr is NULL!\n}`,
+   hint:'Add: if (ptr == NULL) return -1; before dereferencing.',
+   check:c=>c.includes('NULL')||(c.includes('ptr ==')||c.includes('ptr=='))&&c.includes('null')||c.includes('!ptr')},
+  {id:'C2B',lang:'C',lvl:2,title:'FIX: POINTER DECLARATION',type:'POINTER',points:650,
+   desc:'<span class="err-tag">ERROR:</span> The pointer to int is declared incorrectly — the <span class="hint-tag">*</span> is in the wrong position.',
+   code:`#include <stdio.h>\n\nint main() {\n    int val = 42;\n    int *ptr;  // Fix this line:\n    int& p = &val;\n    printf("%d\\n", *ptr);\n    return 0;\n}`,
+   hint:'A pointer to int is: int *ptr = &val; (asterisk before name, ampersand to get address)',
+   check:c=>c.includes('int *ptr = &val')||c.includes('int* ptr = &val')},
+  {id:'C2C',lang:'C',lvl:2,title:'PREDICT: POINTER ARITHMETIC',type:'OUTPUT',points:550,
+   desc:'<span class="err-tag">ANALYSIS:</span> What value does the program print? Type ONLY the number.',
+   code:`#include <stdio.h>\nint main() {\n    int arr[] = {10, 20, 30, 40};\n    int *p = arr;\n    p++;\n    printf("%d", *p);\n    return 0;\n}\n// Type the printed value:`,
+   hint:'p starts at arr[0]=10, p++ moves to arr[1]=20',
+   check:c=>c.trim().replace(/;$/,'')==='20'},
+  // LEVEL 3: Memory
+  {id:'C3A',lang:'C',lvl:3,title:'FIX: MEMORY LEAK',type:'MEMORY',points:750,
+   desc:'<span class="err-tag">LEAK:</span> This function allocates memory with <span class="hint-tag">malloc</span> but never frees it. Add the missing <span class="hint-tag">free()</span> call.',
+   code:`#include <stdlib.h>\n\nvoid allocateBuffer() {\n    int *buf = (int*)malloc(100 * sizeof(int));\n    buf[0] = 42;\n    // Memory leaked! Never freed.\n    return;\n}`,
+   hint:'Add: free(buf); before the return statement.',
+   check:c=>c.includes('free(buf)')},
+  {id:'C3B',lang:'C',lvl:3,title:'FIX: WRONG MALLOC SIZE',type:'MEMORY',points:800,
+   desc:'<span class="err-tag">BUG:</span> The malloc is allocating <span class="hint-tag">4</span> bytes for 10 integers — it should use <span class="hint-tag">sizeof(int)</span>.',
+   code:`#include <stdlib.h>\n\nint main() {\n    // Allocating only 4 bytes for 10 ints — WRONG!\n    int *arr = (int*)malloc(4);\n    // Should allocate for 10 integers\n    return 0;\n}`,
+   hint:'Use: malloc(10 * sizeof(int)) to allocate space for 10 integers.',
+   check:c=>c.includes('10 * sizeof(int)')||c.includes('10*sizeof(int)')},
+  {id:'C3C',lang:'C',lvl:3,title:'PREDICT: SIZEOF OUTPUT',type:'OUTPUT',points:650,
+   desc:'<span class="err-tag">ANALYSIS:</span> What does printf print on a typical 64-bit system? Type ONLY the number.',
+   code:`#include <stdio.h>\nint main() {\n    printf("%zu", sizeof(int));\n    return 0;\n}\n// Type the printed value:`,
+   hint:'On most 32-bit and 64-bit systems, sizeof(int) = 4 bytes.',
+   check:c=>c.trim().replace(/;$/,'')==='4'},
+  // LEVEL 4: Structs
+  {id:'C4A',lang:'C',lvl:4,title:'FIX: STRUCT MEMBER ACCESS',type:'STRUCT',points:900,
+   desc:'<span class="err-tag">ERROR:</span> A pointer to a struct must use <span class="hint-tag">-></span> not <span class="hint-tag">.</span> to access members.',
+   code:`#include <stdio.h>\n\ntypedef struct {\n    int timer;\n    int armed;\n} Bomb;\n\nint main() {\n    Bomb b = {30, 1};\n    Bomb *ptr = &b;\n    printf("%d\\n", ptr.timer);  // Wrong!\n    return 0;\n}`,
+   hint:'Use ptr->timer instead of ptr.timer when accessing via pointer.',
+   check:c=>c.includes('ptr->timer')},
+  {id:'C4B',lang:'C',lvl:4,title:'FIX: TYPEDEF STRUCT',type:'STRUCT',points:850,
+   desc:'<span class="err-tag">FAULT:</span> The typedef struct declaration is missing the closing typedef name. Fix the syntax.',
+   code:`#include <stdio.h>\n\ntypedef struct {\n    int id;\n    int danger_level;\n    char name[32];\n}; // Missing typedef name!\n\nint main() {\n    Bomb b;\n    return 0;\n}`,
+   hint:'Add "Bomb" after the closing } before the semicolon: } Bomb;',
+   check:c=>c.includes('} Bomb;')},
+  {id:'C4C',lang:'C',lvl:4,title:'PREDICT: STRUCT SIZE',type:'OUTPUT',points:750,
+   desc:'<span class="err-tag">ANALYSIS:</span> A struct has two ints. What does <span class="hint-tag">sizeof(Point)</span> most likely print? Type ONLY the number.',
+   code:`#include <stdio.h>\ntypedef struct { int x; int y; } Point;\nint main() {\n    printf("%zu", sizeof(Point));\n    return 0;\n}\n// Type the printed value (two 4-byte ints):`,
+   hint:'Each int is 4 bytes, two ints = 8 bytes (no padding in this simple case).',
+   check:c=>c.trim().replace(/;$/,'')==='8'},
+  // LEVEL 5: Arrays
+  {id:'C5A',lang:'C',lvl:5,title:'FIX: ARRAY BOUNDS',type:'ARRAY',points:1000,
+   desc:'<span class="err-tag">OVERFLOW:</span> This loop accesses one element past the array end. Fix the loop condition.',
+   code:`#include <stdio.h>\n\nint main() {\n    int codes[5] = {1, 2, 3, 4, 5};\n    int sum = 0;\n    for (int i = 0; i <= 5; i++) {  // Bug: goes to index 5!\n        sum += codes[i];\n    }\n    printf("%d\\n", sum);\n    return 0;\n}`,
+   hint:'Change <= 5 to < 5 — valid indices are 0 through 4.',
+   check:c=>c.includes('i < 5')&&!c.includes('i <= 5')},
+  {id:'C5B',lang:'C',lvl:5,title:'FIX: ARRAY INIT',type:'ARRAY',points:950,
+   desc:'<span class="err-tag">UNINITIALIZED:</span> This char array is used as a string but has no null terminator. Fix by initializing it properly.',
+   code:`#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char code[5];\n    code[0] = 'A'; code[1] = 'L'; code[2] = 'P'; code[3] = 'H'; code[4] = 'A';\n    printf("%s\\n", code);  // No null terminator — undefined behavior!\n    return 0;\n}`,
+   hint:'Declare as char code[6] and set code[5] = \'\\0\'; OR use char code[] = "ALPHA";',
+   check:c=>c.includes('"ALPHA"')||(c.includes("code[5] = '\\0'")||c.includes('code[5]=\'\\0\''))},
+  {id:'C5C',lang:'C',lvl:5,title:'PREDICT: ARRAY SUM',type:'OUTPUT',points:850,
+   desc:'<span class="err-tag">ANALYSIS:</span> What value is printed? Type ONLY the number.',
+   code:`#include <stdio.h>\nint main() {\n    int a[] = {3, 6, 9};\n    int s = 0;\n    for (int i = 0; i < 3; i++) s += a[i];\n    printf("%d", s);\n    return 0;\n}\n// Type the printed value:`,
+   hint:'3 + 6 + 9 = 18',
+   check:c=>c.trim().replace(/;$/,'')==='18'},
+  // LEVEL 6: Strings
+  {id:'C6A',lang:'C',lvl:6,title:'FIX: STRCMP USAGE',type:'STRING',points:1200,
+   desc:'<span class="err-tag">BUG:</span> <span class="hint-tag">strcmp</span> returns 0 when strings are EQUAL, not when they differ. Fix the condition.',
+   code:`#include <string.h>\n#include <stdio.h>\n\nint checkCode(char *input) {\n    if (strcmp(input, "DEFUSE") != 0) {\n        printf("BOMB DEFUSED!\\n");  // Wrong! Fires when NOT equal\n    }\n    return 0;\n}`,
+   hint:'strcmp returns 0 for equal strings. Use == 0 to check equality.',
+   check:c=>c.includes('strcmp')&&c.includes('== 0')&&!c.includes('!= 0')},
+  {id:'C6B',lang:'C',lvl:6,title:'FIX: STRCPY OVERFLOW',type:'STRING',points:1100,
+   desc:'<span class="err-tag">OVERFLOW:</span> Using <span class="hint-tag">strcpy</span> without size limit is dangerous. Replace with <span class="hint-tag">strncpy</span> using the buffer size.',
+   code:`#include <string.h>\n\nvoid setCode(char *dest, char *src) {\n    strcpy(dest, src);  // Buffer overflow risk!\n    // dest is only 32 bytes\n}`,
+   hint:'Replace with: strncpy(dest, src, 31); dest[31] = \'\\0\';',
+   check:c=>c.includes('strncpy(')},
+  {id:'C6C',lang:'C',lvl:6,title:'PREDICT: STRLEN OUTPUT',type:'OUTPUT',points:1000,
+   desc:'<span class="err-tag">ANALYSIS:</span> What does strlen print? Type ONLY the number.',
+   code:`#include <stdio.h>\n#include <string.h>\nint main() {\n    char s[] = "DEFUSE";\n    printf("%zu", strlen(s));\n    return 0;\n}\n// Type the printed value:`,
+   hint:'strlen counts characters WITHOUT the null terminator. "DEFUSE" has 6 chars.',
+   check:c=>c.trim().replace(/;$/,'')==='6'},
+  // LEVEL 7: Preprocessor
+  {id:'C7A',lang:'C',lvl:7,title:'FIX: MACRO SYNTAX',type:'PREPROCESSOR',points:1300,
+   desc:'<span class="err-tag">ERROR:</span> The <span class="hint-tag">#define</span> macro has wrong syntax — it uses <span class="hint-tag">=</span> which is not valid in macros.',
+   code:`#include <stdio.h>\n\n#define MAX_WIRES = 6    // Wrong syntax!\n#define DEFUSE_CODE "ALPHA-9"\n\nint main() {\n    printf("Wires: %d\\n", MAX_WIRES);\n    return 0;\n}`,
+   hint:'#define does NOT use = sign. Write: #define MAX_WIRES 6',
+   check:c=>{const lines=c.split('\n');return lines.some(l=>l.trim().match(/^#define\s+MAX_WIRES\s+6\s*$/))}},
+  {id:'C7B',lang:'C',lvl:7,title:'FIX: INCLUDE GUARD',type:'PREPROCESSOR',points:1200,
+   desc:'<span class="err-tag">DUPLICATE:</span> This header file is missing include guards to prevent double inclusion. Add them.',
+   code:`// bomb.h - missing include guards!\nvoid armBomb(int level);\nvoid defuseBomb(void);\nint getBombStatus(void);`,
+   hint:'Add #ifndef BOMB_H / #define BOMB_H at top and #endif at bottom.',
+   check:c=>c.includes('#ifndef')&&c.includes('#define')&&c.includes('#endif')},
+  {id:'C7C',lang:'C',lvl:7,title:'PREDICT: MACRO RESULT',type:'OUTPUT',points:1050,
+   desc:'<span class="err-tag">ANALYSIS:</span> What value does the program print? Type ONLY the number.',
+   code:`#include <stdio.h>\n#define DOUBLE(x) ((x) * 2)\nint main() {\n    printf("%d", DOUBLE(7));\n    return 0;\n}\n// Type the printed value:`,
+   hint:'DOUBLE(7) expands to ((7) * 2) = 14',
+   check:c=>c.trim().replace(/;$/,'')==='14'},
+  // LEVEL 8: Bitfields
+  {id:'C8A',lang:'C',lvl:8,title:'FIX: BITWISE AND',type:'BITFIELD',points:1400,
+   desc:'<span class="err-tag">ERROR:</span> To check if bit 3 is set, you must use bitwise <span class="hint-tag">AND (&)</span> not logical AND (<span class="hint-tag">&&</span>).',
+   code:`#include <stdio.h>\n\nint isBit3Set(int flags) {\n    return (flags && 0x08);  // Wrong! Uses logical &&\n}`,
+   hint:'Use single & for bitwise AND: return (flags & 0x08);',
+   check:c=>c.includes('flags & 0x08')||c.includes('flags&0x08')},
+  {id:'C8B',lang:'C',lvl:8,title:'FIX: BIT SHIFT',type:'BITFIELD',points:1350,
+   desc:'<span class="err-tag">WRONG SHIFT:</span> To set bit 4 (value 16), shift <span class="hint-tag">1</span> left by <span class="hint-tag">4</span> positions, not 3.',
+   code:`#include <stdio.h>\n\nint main() {\n    int flag = 1 << 3;  // Sets bit 3 (value 8), should be bit 4 (value 16)\n    printf("%d\\n", flag);\n    return 0;\n}`,
+   hint:'Change 1 << 3 to 1 << 4 to set bit 4 (value 16).',
+   check:c=>c.includes('1 << 4')||c.includes('1<<4')},
+  {id:'C8C',lang:'C',lvl:8,title:'PREDICT: XOR RESULT',type:'OUTPUT',points:1200,
+   desc:'<span class="err-tag">ANALYSIS:</span> What value does the program print? Type ONLY the number.',
+   code:`#include <stdio.h>\nint main() {\n    int a = 0b1010;  // 10\n    int b = 0b1100;  // 12\n    printf("%d", a ^ b);\n    return 0;\n}\n// 1010 XOR 1100 = 0110 = ?`,
+   hint:'XOR: 1010 ^ 1100 = 0110 in binary = 6 in decimal',
+   check:c=>c.trim().replace(/;$/,'')==='6'},
+  // LEVEL 9: File I/O
+  {id:'C9A',lang:'C',lvl:9,title:'FIX: FOPEN MODE',type:'FILEIO',points:1600,
+   desc:'<span class="err-tag">WRONG MODE:</span> The file is opened in <span class="hint-tag">"r"</span> (read) mode but then written to. Use <span class="hint-tag">"w"</span> mode for writing.',
+   code:`#include <stdio.h>\n\nvoid saveDefusalCode(char *code) {\n    FILE *f = fopen("bomb.txt", "r");  // Wrong mode!\n    if (f) {\n        fprintf(f, "%s\\n", code);\n        fclose(f);\n    }\n}`,
+   hint:'Change "r" to "w" for write mode, or "a" for append mode.',
+   check:c=>c.includes('"w"')||c.includes('"a"')},
+  {id:'C9B',lang:'C',lvl:9,title:'FIX: MISSING FCLOSE',type:'FILEIO',points:1500,
+   desc:'<span class="err-tag">RESOURCE LEAK:</span> The file is opened but never closed. Add the missing <span class="hint-tag">fclose()</span> call.',
+   code:`#include <stdio.h>\n\nchar readCode() {\n    FILE *f = fopen("code.txt", "r");\n    char buf[64];\n    if (f) {\n        fgets(buf, 64, f);\n        // File never closed — resource leak!\n    }\n    return buf[0];\n}`,
+   hint:'Add: fclose(f); after the fgets() call.',
+   check:c=>c.includes('fclose(f)')},
+  {id:'C9C',lang:'C',lvl:9,title:'PREDICT: FILE MODES',type:'OUTPUT',points:1400,
+   desc:'<span class="err-tag">ANALYSIS:</span> Which fopen mode opens for READING and WRITING without truncating? Type ONLY the mode string (e.g. r+).',
+   code:`// fopen modes:\n// "r"  = read only\n// "w"  = write (truncates)\n// "a"  = append\n// "r+" = ?\n// "w+" = read+write (truncates)\n// Which opens read+write WITHOUT truncating?\n// Type the mode:`,
+   hint:'"r+" opens for reading AND writing, file must exist, no truncation.',
+   check:c=>c.trim().replace(/["';]/g,'')==='r+'},
+  // LEVEL 10: Function pointers + advanced
+  {id:'C10A',lang:'C',lvl:10,title:'FIX: FUNCTION POINTER DECL',type:'ADVANCED',points:2000,
+   desc:'<span class="err-tag">SYNTAX ERROR:</span> The function pointer declaration is malformed. A pointer to a function returning int taking int must use correct syntax.',
+   code:`#include <stdio.h>\n\nint square(int x) { return x * x; }\n\nint main() {\n    int *fn(int) = square;  // Wrong function pointer syntax!\n    printf("%d\\n", fn(5));\n    return 0;\n}`,
+   hint:'Correct syntax: int (*fn)(int) = square; — the asterisk is inside parens.',
+   check:c=>c.includes('int (*fn)(int)')},
+  {id:'C10B',lang:'C',lvl:10,title:'FIX: RECURSIVE MISSING BASE',type:'RECURSION',points:1900,
+   desc:'<span class="err-tag">STACK OVERFLOW:</span> The recursive sum function has no base case. Add it.',
+   code:`#include <stdio.h>\n\nint sumTo(int n) {\n    // Missing base case — infinite recursion!\n    return n + sumTo(n - 1);\n}`,
+   hint:'Add: if (n <= 0) return 0; as the first line.',
+   check:c=>c.includes('if (n <= 0)')||c.includes('if(n<=0)')||c.includes('if (n == 0)')||c.includes('if(n==0)')},
+  {id:'C10C',lang:'C',lvl:10,title:'PREDICT: POINTER TO POINTER',type:'OUTPUT',points:1800,
+   desc:'<span class="err-tag">ANALYSIS:</span> What value does the program print? Type ONLY the number.',
+   code:`#include <stdio.h>\nint main() {\n    int x = 99;\n    int *p = &x;\n    int **pp = &p;\n    printf("%d", **pp);\n    return 0;\n}\n// Type the printed value:`,
+   hint:'**pp dereferences twice: pp -> p -> x = 99',
+   check:c=>c.trim().replace(/;$/,'')==='99'},
+];
+
+/* ══════════════════════════════════════════════════════
+   C++ CHALLENGES (Levels 1-10, 3 per level)
+══════════════════════════════════════════════════════ */
+const CPP_CHALLENGES = [
+  // LEVEL 1: Classes
+  {id:'CPP1A',lang:'CPP',lvl:1,title:'FIX: CLASS ACCESS MODIFIER',type:'CLASS',points:400,
+   desc:'<span class="err-tag">ACCESS ERROR:</span> The class member <span class="hint-tag">code</span> is private but accessed directly from outside. Fix by making it public or adding a getter.',
+   code:`#include <iostream>\n\nclass Bomb {\n    int code;  // private by default\npublic:\n    Bomb(int c) : code(c) {}\n};\n\nint main() {\n    Bomb b(42);\n    std::cout << b.code;  // Error: code is private!\n    return 0;\n}`,
+   hint:'Either move "int code;" under "public:", or add: int getCode() { return code; }',
+   check:c=>(c.includes('public:')&&c.split('public:')[1].includes('int code'))||c.includes('getCode()')},
+  {id:'CPP1B',lang:'CPP',lvl:1,title:'FIX: CONSTRUCTOR INIT LIST',type:'CLASS',points:450,
+   desc:'<span class="err-tag">SYNTAX ERROR:</span> The constructor initializer list uses <span class="hint-tag">=</span> instead of the correct member init syntax.',
+   code:`#include <iostream>\n\nclass Bomb {\n    int timer;\n    bool armed;\npublic:\n    Bomb(int t, bool a) : timer = t, armed = a {}  // Wrong syntax!\n    int getTimer() { return timer; }\n};`,
+   hint:'Initializer list uses parens not =: timer(t), armed(a)',
+   check:c=>c.includes('timer(t)')&&c.includes('armed(a)')},
+  {id:'CPP1C',lang:'CPP',lvl:1,title:'PREDICT: CLASS OUTPUT',type:'OUTPUT',points:400,
+   desc:'<span class="err-tag">ANALYSIS:</span> What number does the program print? Type ONLY the number.',
+   code:`#include <iostream>\nclass Counter {\n    int n = 0;\npublic:\n    void inc() { n++; }\n    int get() { return n; }\n};\nint main() {\n    Counter c;\n    c.inc(); c.inc(); c.inc(); c.inc();\n    std::cout << c.get();\n    return 0;\n}\n// Type the printed value:`,
+   hint:'inc() is called 4 times starting from 0.',
+   check:c=>c.trim().replace(/;$/,'')==='4'},
+  // LEVEL 2: STL
+  {id:'CPP2A',lang:'CPP',lvl:2,title:'FIX: VECTOR PUSH BACK',type:'STL',points:600,
+   desc:'<span class="err-tag">WRONG METHOD:</span> The code calls <span class="hint-tag">push_front</span> which does not exist on std::vector. Use <span class="hint-tag">push_back</span>.',
+   code:`#include <vector>\n#include <iostream>\n\nint main() {\n    std::vector<int> codes;\n    codes.push_front(10);  // Error: vector has no push_front!\n    codes.push_front(20);\n    std::cout << codes.size();\n    return 0;\n}`,
+   hint:'std::vector uses push_back() to add to the end. std::deque has push_front.',
+   check:c=>c.includes('push_back')&&!c.includes('push_front')},
+  {id:'CPP2B',lang:'CPP',lvl:2,title:'FIX: MAP ACCESS',type:'STL',points:650,
+   desc:'<span class="err-tag">WRONG ACCESS:</span> std::map is being accessed with <span class="hint-tag">.get()</span> which does not exist. Use the <span class="hint-tag">[]</span> operator or <span class="hint-tag">.at()</span>.',
+   code:`#include <map>\n#include <string>\n#include <iostream>\n\nint main() {\n    std::map<std::string, int> wires;\n    wires["red"] = 1;\n    std::cout << wires.get("red");  // Wrong method!\n    return 0;\n}`,
+   hint:'Use wires["red"] or wires.at("red") to access map values.',
+   check:c=>(c.includes('wires["red"]')||c.includes('wires.at("red")'))&&!c.includes('wires.get')},
+  {id:'CPP2C',lang:'CPP',lvl:2,title:'PREDICT: VECTOR SIZE',type:'OUTPUT',points:550,
+   desc:'<span class="err-tag">ANALYSIS:</span> What does the program print? Type ONLY the number.',
+   code:`#include <vector>\n#include <iostream>\nint main() {\n    std::vector<int> v = {5, 10, 15, 20};\n    v.push_back(25);\n    v.pop_back();\n    std::cout << v.size();\n    return 0;\n}\n// Type the printed value:`,
+   hint:'Start: 4 elements, push_back adds 1 (size=5), pop_back removes 1 (size=4).',
+   check:c=>c.trim().replace(/;$/,'')==='4'},
+  // LEVEL 3: Inheritance
+  {id:'CPP3A',lang:'CPP',lvl:3,title:'FIX: VIRTUAL OVERRIDE',type:'INHERIT',points:750,
+   desc:'<span class="err-tag">MISSING OVERRIDE:</span> The derived class overrides <span class="hint-tag">describe()</span> but is missing the <span class="hint-tag">override</span> keyword.',
+   code:`#include <iostream>\n\nclass Bomb {\npublic:\n    virtual void describe() { std::cout << "Generic bomb"; }\n};\n\nclass SmartBomb : public Bomb {\npublic:\n    void describe() {  // Missing: override keyword\n        std::cout << "Smart bomb";\n    }\n};`,
+   hint:'Add "override" after the function signature: void describe() override {',
+   check:c=>c.includes('void describe() override')},
+  {id:'CPP3B',lang:'CPP',lvl:3,title:'FIX: BASE CONSTRUCTOR CALL',type:'INHERIT',points:800,
+   desc:'<span class="err-tag">MISSING CALL:</span> The derived class constructor does not call the base class constructor. Add it to the initializer list.',
+   code:`#include <iostream>\n\nclass Bomb {\nprotected:\n    int timer;\npublic:\n    Bomb(int t) : timer(t) {}\n};\n\nclass TimedBomb : public Bomb {\n    int aiLevel;\npublic:\n    TimedBomb(int t, int ai) : aiLevel(ai) {}  // Missing: Bomb(t) call!\n    void show() { std::cout << timer << " " << aiLevel; }\n};`,
+   hint:'Add Bomb(t) to the initializer list: TimedBomb(int t, int ai) : Bomb(t), aiLevel(ai) {}',
+   check:c=>c.includes('Bomb(t)')},
+  {id:'CPP3C',lang:'CPP',lvl:3,title:'PREDICT: VIRTUAL DISPATCH',type:'OUTPUT',points:700,
+   desc:'<span class="err-tag">ANALYSIS:</span> What does the program print? Type ONLY the word.',
+   code:`#include <iostream>\nclass A {\npublic:\n    virtual void say() { std::cout << "Alpha"; }\n};\nclass B : public A {\npublic:\n    void say() override { std::cout << "Bravo"; }\n};\nint main() {\n    A *p = new B();\n    p->say();\n    delete p;\n    return 0;\n}\n// Type the printed word:`,
+   hint:'Virtual dispatch — p points to B object, so B::say() runs, printing "Bravo".',
+   check:c=>c.trim().toLowerCase()==='bravo'},
+  // LEVEL 4: Templates
+  {id:'CPP4A',lang:'CPP',lvl:4,title:'FIX: TEMPLATE SYNTAX',type:'TEMPLATE',points:900,
+   desc:'<span class="err-tag">SYNTAX ERROR:</span> The template function declaration is missing the <span class="hint-tag">template&lt;typename T&gt;</span> prefix.',
+   code:`#include <iostream>\n\n// Missing template declaration!\nT maxOf(T a, T b) {\n    return (a > b) ? a : b;\n}\n\nint main() {\n    std::cout << maxOf(3, 7);\n    return 0;\n}`,
+   hint:'Add: template<typename T> on the line before the function definition.',
+   check:c=>c.includes('template<typename T>')||c.includes('template <typename T>')},
+  {id:'CPP4B',lang:'CPP',lvl:4,title:'FIX: TEMPLATE CALL',type:'TEMPLATE',points:850,
+   desc:'<span class="err-tag">WRONG CALL:</span> The template function is called with wrong type argument syntax. Use <span class="hint-tag">&lt;int&gt;</span> for explicit instantiation.',
+   code:`#include <iostream>\n\ntemplate<typename T>\nT square(T x) { return x * x; }\n\nint main() {\n    // Explicit template instantiation is wrong:\n    std::cout << square[int](5);  // Wrong!\n    return 0;\n}`,
+   hint:'Use angle brackets: square<int>(5) not square[int](5).',
+   check:c=>c.includes('square<int>(5)')},
+  {id:'CPP4C',lang:'CPP',lvl:4,title:'PREDICT: TEMPLATE OUTPUT',type:'OUTPUT',points:750,
+   desc:'<span class="err-tag">ANALYSIS:</span> What does the program print? Type ONLY the number.',
+   code:`#include <iostream>\ntemplate<typename T>\nT add(T a, T b) { return a + b; }\nint main() {\n    std::cout << add(10, 25);\n    return 0;\n}\n// Type the printed value:`,
+   hint:'add(10, 25) returns 10 + 25 = 35',
+   check:c=>c.trim().replace(/;$/,'')==='35'},
+  // LEVEL 5: Smart Pointers
+  {id:'CPP5A',lang:'CPP',lvl:5,title:'FIX: UNIQUE_PTR COPY',type:'SMARTPTR',points:1000,
+   desc:'<span class="err-tag">ERROR:</span> <span class="hint-tag">unique_ptr</span> cannot be copied — ownership is exclusive. Use <span class="hint-tag">std::move</span> to transfer ownership.',
+   code:`#include <memory>\n#include <iostream>\n\nint main() {\n    std::unique_ptr<int> p1 = std::make_unique<int>(42);\n    std::unique_ptr<int> p2 = p1;  // Error: can't copy unique_ptr!\n    std::cout << *p2;\n    return 0;\n}`,
+   hint:'Use: std::unique_ptr<int> p2 = std::move(p1); to transfer ownership.',
+   check:c=>c.includes('std::move(p1)')},
+  {id:'CPP5B',lang:'CPP',lvl:5,title:'FIX: SHARED_PTR USAGE',type:'SMARTPTR',points:950,
+   desc:'<span class="err-tag">WRONG FACTORY:</span> shared_ptr should be created with <span class="hint-tag">std::make_shared</span> not <span class="hint-tag">new</span> directly for exception safety.',
+   code:`#include <memory>\n\nstd::shared_ptr<int> createBomb() {\n    return std::shared_ptr<int>(new int(99));  // Avoid raw new!\n}`,
+   hint:'Replace with: return std::make_shared<int>(99);',
+   check:c=>c.includes('make_shared<int>(99)')},
+  {id:'CPP5C',lang:'CPP',lvl:5,title:'PREDICT: SHARED COUNT',type:'OUTPUT',points:850,
+   desc:'<span class="err-tag">ANALYSIS:</span> What does <span class="hint-tag">use_count()</span> print after the copy? Type ONLY the number.',
+   code:`#include <memory>\n#include <iostream>\nint main() {\n    auto p1 = std::make_shared<int>(10);\n    auto p2 = p1;\n    auto p3 = p1;\n    std::cout << p1.use_count();\n    return 0;\n}\n// Type the printed value:`,
+   hint:'p1, p2, p3 all share ownership. use_count() = 3.',
+   check:c=>c.trim().replace(/;$/,'')==='3'},
+  // LEVEL 6: Operator Overloading
+  {id:'CPP6A',lang:'CPP',lvl:6,title:'FIX: OPERATOR SIGNATURE',type:'OPERATOR',points:1200,
+   desc:'<span class="err-tag">WRONG SIGNATURE:</span> The <span class="hint-tag">operator+</span> is missing the <span class="hint-tag">const</span> qualifier on the parameter.',
+   code:`class Vec2 {\npublic:\n    float x, y;\n    Vec2(float x, float y) : x(x), y(y) {}\n    Vec2 operator+(Vec2 other) {  // Should take const ref!\n        return Vec2(x + other.x, y + other.y);\n    }\n};`,
+   hint:'Change the parameter to: const Vec2& other for efficiency and correctness.',
+   check:c=>c.includes('const Vec2&')||c.includes('const Vec2 &')},
+  {id:'CPP6B',lang:'CPP',lvl:6,title:'FIX: EQUALITY OPERATOR',type:'OPERATOR',points:1150,
+   desc:'<span class="err-tag">WRONG OPERATOR:</span> The <span class="hint-tag">==</span> operator should return <span class="hint-tag">bool</span>, not <span class="hint-tag">int</span>.',
+   code:`class Bomb {\n    int id;\npublic:\n    Bomb(int i) : id(i) {}\n    int operator==(const Bomb& other) {  // Should return bool!\n        return id == other.id;\n    }\n};`,
+   hint:'Change return type from "int" to "bool": bool operator==(const Bomb& other)',
+   check:c=>c.includes('bool operator==')},
+  {id:'CPP6C',lang:'CPP',lvl:6,title:'PREDICT: OPERATOR OUTPUT',type:'OUTPUT',points:1000,
+   desc:'<span class="err-tag">ANALYSIS:</span> What does the program print? Type ONLY the number.',
+   code:`#include <iostream>\nclass Num {\n    int v;\npublic:\n    Num(int v) : v(v) {}\n    Num operator+(const Num& o) { return Num(v + o.v); }\n    int get() { return v; }\n};\nint main() {\n    Num a(8), b(5);\n    std::cout << (a + b).get();\n    return 0;\n}\n// Type the printed value:`,
+   hint:'operator+ adds the values: 8 + 5 = 13',
+   check:c=>c.trim().replace(/;$/,'')==='13'},
+  // LEVEL 7: Exceptions
+  {id:'CPP7A',lang:'CPP',lvl:7,title:'FIX: THROW TYPE',type:'EXCEPTION',points:1300,
+   desc:'<span class="err-tag">WRONG THROW:</span> Throwing an int is bad practice. Throw a <span class="hint-tag">std::runtime_error</span> instead.',
+   code:`#include <stdexcept>\n\nvoid defuse(int code) {\n    if (code != 9999) {\n        throw 42;  // Bad: throwing int!\n    }\n}`,
+   hint:'Replace "throw 42" with: throw std::runtime_error("Invalid code");',
+   check:c=>c.includes('std::runtime_error')},
+  {id:'CPP7B',lang:'CPP',lvl:7,title:'FIX: CATCH TYPE',type:'EXCEPTION',points:1200,
+   desc:'<span class="err-tag">WRONG CATCH:</span> The catch block catches <span class="hint-tag">std::exception</span> by value — it should catch by <span class="hint-tag">const reference</span> to avoid slicing.',
+   code:`#include <stdexcept>\n#include <iostream>\n\nvoid run() {\n    try {\n        throw std::runtime_error("BOOM");\n    } catch (std::exception e) {  // Should be const ref!\n        std::cout << e.what();\n    }\n}`,
+   hint:'Change to: catch (const std::exception& e) to avoid object slicing.',
+   check:c=>c.includes('const std::exception&')},
+  {id:'CPP7C',lang:'CPP',lvl:7,title:'PREDICT: EXCEPTION OUTPUT',type:'OUTPUT',points:1050,
+   desc:'<span class="err-tag">ANALYSIS:</span> What does the program print? Type ONLY the word.',
+   code:`#include <iostream>\n#include <stdexcept>\nint main() {\n    try {\n        throw std::runtime_error("DANGER");\n    } catch (const std::exception& e) {\n        std::cout << e.what();\n    }\n    return 0;\n}\n// Type the printed word:`,
+   hint:'e.what() returns the message passed to runtime_error constructor.',
+   check:c=>c.trim()==='DANGER'},
+  // LEVEL 8: Lambdas
+  {id:'CPP8A',lang:'CPP',lvl:8,title:'FIX: LAMBDA CAPTURE',type:'LAMBDA',points:1400,
+   desc:'<span class="err-tag">CAPTURE ERROR:</span> The lambda uses local variable <span class="hint-tag">threshold</span> but has an empty capture list <span class="hint-tag">[]</span>. Fix it.',
+   code:`#include <vector>\n#include <algorithm>\n#include <iostream>\n\nint main() {\n    std::vector<int> v = {1, 5, 3, 8, 2};\n    int threshold = 4;\n    auto found = std::find_if(v.begin(), v.end(),\n        [] (int x) { return x > threshold; });  // threshold not captured!\n    std::cout << *found;\n    return 0;\n}`,
+   hint:'Change [] to [threshold] or [&] to capture threshold by value or reference.',
+   check:c=>c.includes('[threshold]')||c.includes('[&]')||c.includes('[=]')},
+  {id:'CPP8B',lang:'CPP',lvl:8,title:'FIX: LAMBDA IN SORT',type:'LAMBDA',points:1350,
+   desc:'<span class="err-tag">WRONG COMPARATOR:</span> The sort lambda has wrong parameter types — they must be <span class="hint-tag">const int&</span> or at least <span class="hint-tag">int</span>.',
+   code:`#include <vector>\n#include <algorithm>\n#include <iostream>\n\nint main() {\n    std::vector<int> v = {5, 2, 8, 1};\n    std::sort(v.begin(), v.end(),\n        [](string a, string b) { return a < b; });  // Wrong types!\n    std::cout << v[0];\n    return 0;\n}`,
+   hint:'Use int parameters: [](int a, int b) { return a < b; }',
+   check:c=>c.includes('[](int a, int b)')},
+  {id:'CPP8C',lang:'CPP',lvl:8,title:'PREDICT: LAMBDA OUTPUT',type:'OUTPUT',points:1200,
+   desc:'<span class="err-tag">ANALYSIS:</span> What does the program print? Type ONLY the number.',
+   code:`#include <iostream>\nint main() {\n    auto mul = [](int a, int b) { return a * b; };\n    std::cout << mul(6, 7);\n    return 0;\n}\n// Type the printed value:`,
+   hint:'6 * 7 = 42',
+   check:c=>c.trim().replace(/;$/,'')==='42'},
+  // LEVEL 9: RAII
+  {id:'CPP9A',lang:'CPP',lvl:9,title:'FIX: DESTRUCTOR LEAK',type:'RAII',points:1600,
+   desc:'<span class="err-tag">RESOURCE LEAK:</span> The class holds a raw pointer but the destructor does not delete it. Add the missing <span class="hint-tag">delete</span>.',
+   code:`class DataHolder {\n    int* data;\npublic:\n    DataHolder(int size) { data = new int[size]; }\n    ~DataHolder() {\n        // Missing: delete[] data;\n    }\n};`,
+   hint:'Add: delete[] data; inside the destructor body.',
+   check:c=>c.includes('delete[] data')},
+  {id:'CPP9B',lang:'CPP',lvl:9,title:'FIX: COPY CONSTRUCTOR',type:'RAII',points:1500,
+   desc:'<span class="err-tag">SHALLOW COPY:</span> The copy constructor copies the pointer, not the data — both objects end up sharing the same memory. Fix with deep copy.',
+   code:`class Buffer {\n    int* data;\n    int size;\npublic:\n    Buffer(int s) : size(s) { data = new int[s]; }\n    Buffer(const Buffer& other) : size(other.size) {\n        data = other.data;  // Shallow copy — shares pointer!\n    }\n    ~Buffer() { delete[] data; }\n};`,
+   hint:'Allocate new memory and copy: data = new int[size]; memcpy(data, other.data, size*sizeof(int));',
+   check:c=>c.includes('new int[size]')&&c.includes('memcpy')||c.includes('std::copy')},
+  {id:'CPP9C',lang:'CPP',lvl:9,title:'PREDICT: DESTRUCTOR ORDER',type:'OUTPUT',points:1400,
+   desc:'<span class="err-tag">ANALYSIS:</span> What gets printed last (in which order do destructors run)? Type ONLY the number of the LAST destructor called.',
+   code:`#include <iostream>\nstruct A {\n    int n;\n    A(int x): n(x) {}\n    ~A() { std::cout << n; }\n};\nint main() {\n    A a1(1), a2(2), a3(3);\n    return 0;\n}\n// Destructors run in REVERSE order of construction\n// What is printed LAST?`,
+   hint:'C++ destroys local variables in reverse order. a3 first, a1 last. Last printed: 1',
+   check:c=>c.trim().replace(/;$/,'')==='1'},
+  // LEVEL 10: Advanced
+  {id:'CPP10A',lang:'CPP',lvl:10,title:'FIX: VARIADIC TEMPLATE',type:'ADVANCED',points:2000,
+   desc:'<span class="err-tag">ERROR:</span> The variadic template pack expansion is missing the <span class="hint-tag">...</span> after args in the recursive call.',
+   code:`#include <iostream>\n\nvoid printAll() {}  // Base case\n\ntemplate<typename T, typename... Args>\nvoid printAll(T first, Args... args) {\n    std::cout << first << " ";\n    printAll(args);  // Missing ...!\n}`,
+   hint:'Change printAll(args) to printAll(args...); to expand the parameter pack.',
+   check:c=>c.includes('printAll(args...)')},
+  {id:'CPP10B',lang:'CPP',lvl:10,title:'FIX: CONSTEXPR FUNCTION',type:'ADVANCED',points:1900,
+   desc:'<span class="err-tag">MISSING:</span> The function needs the <span class="hint-tag">constexpr</span> keyword so it can be evaluated at compile time.',
+   code:`// Should be evaluated at compile time:\nint fibonacci(int n) {\n    if (n <= 1) return n;\n    return fibonacci(n-1) + fibonacci(n-2);\n}\n\nconstexpr int FIBO_10 = fibonacci(10);  // Error: not constexpr!`,
+   hint:'Add constexpr before the return type: constexpr int fibonacci(int n)',
+   check:c=>c.includes('constexpr int fibonacci')},
+  {id:'CPP10C',lang:'CPP',lvl:10,title:'PREDICT: MOVE SEMANTICS',type:'OUTPUT',points:1800,
+   desc:'<span class="err-tag">ANALYSIS:</span> After std::move, what is the size of the moved-from vector? Type ONLY the number.',
+   code:`#include <vector>\n#include <iostream>\n#include <utility>\nint main() {\n    std::vector<int> v1 = {1, 2, 3, 4, 5};\n    std::vector<int> v2 = std::move(v1);\n    std::cout << v1.size();\n    return 0;\n}\n// After move, v1 is in valid-but-unspecified state.\n// Typically size = ?`,
+   hint:'After std::move, the source vector is typically empty. size() = 0.',
+   check:c=>c.trim().replace(/;$/,'')==='0'},
+];
+
+/* ══════════════════════════════════════════════════════
+   COMBINED CHALLENGE BANK
+══════════════════════════════════════════════════════ */
+const ALL_CHALLENGES = {
+  js:  JS_CHALLENGES,
+  c:   C_CHALLENGES,
+  cpp: CPP_CHALLENGES,
+};
+
+/* ══════════════════════════════════════════════════════
+   SYNTAX HIGHLIGHTERS
+══════════════════════════════════════════════════════ */
+function highlightJS(code) {
+  let h = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const protected_segments = [];
+  let pi = 0;
+  h = h.replace(/(\/\/.*$|\/\*[\s\S]*?\*\/)/gm, m => { const k=`\x00${pi++}\x00`; protected_segments.push(`<span class="s-cmt">${m}</span>`); return k; });
+  h = h.replace(/(["'`])(?:(?!\1)[^\\]|\\[\s\S])*\1/g, m => { const k=`\x00${pi++}\x00`; protected_segments.push(`<span class="s-str">${m}</span>`); return k; });
+  h = h.replace(/\b(\d+(\.\d+)?)\b/g, '<span class="s-num">$1</span>');
+  h = h.replace(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(?=\()/g, (m,fn) => `<span class="s-fn">${fn}</span>(`);
+  h = h.replace(/\b(function|return|let|const|var|if|else|for|while|do|switch|case|break|continue|new|class|extends|super|async|await|try|catch|finally|throw|typeof|instanceof|in|of|import|export|default|null|undefined|this|true|false)\b/g, '<span class="s-kw">$1</span>');
+  protected_segments.forEach((s, i) => { h = h.replace(`\x00${i}\x00`, s); });
+  return h;
+}
+
+function highlightC(code) {
+  let h = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const ps = [];
+  let pi = 0;
+  h = h.replace(/(\/\/.*$|\/\*[\s\S]*?\*\/)/gm, m => { const k=`\x00${pi++}\x00`; ps.push(`<span class="s-cmt">${m}</span>`); return k; });
+  h = h.replace(/(#\s*(?:include|define|ifndef|ifdef|endif|pragma|if|else|elif|undef)\b[^\n]*)/g, m => { const k=`\x00${pi++}\x00`; ps.push(`<span class="s-preproc">${m}</span>`); return k; });
+  h = h.replace(/(["'])(?:(?!\1)[^\\]|\\[\s\S])*\1/g, m => { const k=`\x00${pi++}\x00`; ps.push(`<span class="s-str">${m}</span>`); return k; });
+  h = h.replace(/\b(\d+(?:\.\d+)?(?:[uUlLfF]+)?|0x[0-9a-fA-F]+|0b[01]+)\b/g, '<span class="s-num">$1</span>');
+  h = h.replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g, (m,fn) => `<span class="s-fn">${fn}</span>(`);
+  h = h.replace(/\b(int|char|float|double|long|short|unsigned|signed|void|struct|typedef|enum|union|const|static|extern|register|volatile|inline|restrict|auto|size_t|NULL)\b/g, '<span class="s-type">$1</span>');
+  h = h.replace(/\b(if|else|for|while|do|switch|case|break|continue|return|goto|sizeof|typeof)\b/g, '<span class="s-kw">$1</span>');
+  h = h.replace(/([*&])/g, '<span class="s-ptr">$1</span>');
+  ps.forEach((s, i) => { h = h.replace(`\x00${i}\x00`, s); });
+  return h;
+}
+
+function highlightCPP(code) {
+  let h = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const ps = [];
+  let pi = 0;
+  h = h.replace(/(\/\/.*$|\/\*[\s\S]*?\*\/)/gm, m => { const k=`\x00${pi++}\x00`; ps.push(`<span class="s-cmt">${m}</span>`); return k; });
+  h = h.replace(/(#\s*(?:include|define|ifndef|ifdef|endif|pragma|if|else|elif|undef)\b[^\n]*)/g, m => { const k=`\x00${pi++}\x00`; ps.push(`<span class="s-preproc">${m}</span>`); return k; });
+  h = h.replace(/(["'])(?:(?!\1)[^\\]|\\[\s\S])*\1/g, m => { const k=`\x00${pi++}\x00`; ps.push(`<span class="s-str">${m}</span>`); return k; });
+  h = h.replace(/\b(\d+(?:\.\d+)?(?:[uUlLfF]+)?|0x[0-9a-fA-F]+)\b/g, '<span class="s-num">$1</span>');
+  h = h.replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g, (m,fn) => `<span class="s-fn">${fn}</span>(`);
+  h = h.replace(/\b(int|char|float|double|long|short|unsigned|signed|void|bool|auto|const|static|extern|inline|virtual|override|final|explicit|mutable|volatile|constexpr|consteval|size_t|nullptr|NULL|true|false)\b/g, '<span class="s-type">$1</span>');
+  h = h.replace(/\b(class|struct|public|private|protected|template|typename|namespace|using|typedef|enum|union|operator|new|delete|this|return|if|else|for|while|do|switch|case|break|continue|try|catch|throw|noexcept|friend|static_cast|dynamic_cast|reinterpret_cast|const_cast|sizeof|decltype)\b/g, '<span class="s-kw">$1</span>');
+  h = h.replace(/([*&])/g, '<span class="s-ptr">$1</span>');
+  ps.forEach((s, i) => { h = h.replace(`\x00${i}\x00`, s); });
+  return h;
+}
+
+function highlight(code, lang) {
+  if (lang === 'c')   return highlightC(code);
+  if (lang === 'cpp') return highlightCPP(code);
+  return highlightJS(code);
+}
+
+/* ══════════════════════════════════════════════════════
+   GAME STATE
+══════════════════════════════════════════════════════ */
+const G = {
+  lang:'js', mode:'solo', timer:300, timerMax:300, timerInt:null,
+  running:false, paused:false,
+  stage:0, stages:[],
+  xp:0, level:1, combo:1, streak:0, maxStreak:0, maxCombo:1,
+  danger:10, wrongCount:0, startTime:0,
+  totalXp:0, totalDefused:0,
+  levelsCompleted:{js:[],c:[],cpp:[]},
+  currentLevel:1,
+  levelGrades:{js:{},c:{},cpp:{}},
+  hintsUsed:0,
+  powerups:{freeze:2,shield:2,hint:2,surge:1},
+  activePowerups:{frozen:false,shielded:false,surge:false},
+  surgeStagesLeft:0,freezeTimeLeft:0,
+  bgRenderer:null,bgScene:null,bgCamera:null,bgParticles:null,
+  bombRenderer:null,bombScene:null,bombCamera:null,
+  bombBody:null,bombSpark:null,bombSparkLight:null,bombSparkMat:null,bombAnimId:null,
+  briefCountdownInt:null,originalCode:'',
+};
+
+/* ══════════════════════════════════════════════════════
+   PERSISTENCE
+══════════════════════════════════════════════════════ */
+function loadProgress() {
+  const p = k => localStorage.getItem('cr3_'+k);
+  G.totalXp = +p('xp') || 0;
+  G.totalDefused = +p('defused') || 0;
+  G.level = +p('level') || 1;
+  G.currentLevel = +p('curlvl') || 1;
+  G.maxStreak = +p('maxstreak') || 0;
+  G.maxCombo = +p('maxcombo') || 1;
+  G.lang = p('lang') || 'js';
+  try { G.levelsCompleted = JSON.parse(p('levels') || '{"js":[],"c":[],"cpp":[]}'); } catch(e) { G.levelsCompleted={js:[],c:[],cpp:[]}; }
+  try { G.levelGrades = JSON.parse(p('grades') || '{"js":{},"c":{},"cpp":{}}'); } catch(e) { G.levelGrades={js:{},c:{},cpp:{}}; }
+  try { G.powerups = JSON.parse(p('powerups') || '{"freeze":2,"shield":2,"hint":2,"surge":1}'); } catch(e) {}
+}
+
+function saveProgress() {
+  const s = (k,v) => localStorage.setItem('cr3_'+k, v);
+  s('xp',G.totalXp); s('defused',G.totalDefused); s('level',G.level);
+  s('curlvl',G.currentLevel); s('maxstreak',G.maxStreak); s('maxcombo',G.maxCombo);
+  s('lang',G.lang);
+  s('levels',JSON.stringify(G.levelsCompleted));
+  s('grades',JSON.stringify(G.levelGrades));
+  s('powerups',JSON.stringify(G.powerups));
+  // Sync to backend — survives across devices/browsers
+  if (window.GAL_SAVE_GAME) {
+    window.GAL_SAVE_GAME('codered', {
+      totalXp: G.totalXp, totalDefused: G.totalDefused, level: G.level,
+      currentLevel: G.currentLevel, maxStreak: G.maxStreak, maxCombo: G.maxCombo,
+      lang: G.lang, levelsCompleted: G.levelsCompleted,
+      levelGrades: G.levelGrades, powerups: G.powerups, ts: Date.now()
+    });
+  }
+}
+
+// Async resume from backend on load — overrides localStorage if newer
+async function restoreFromBackend(){
+  if (!window.GAL_LOAD_GAME) return;
+  const saved = await window.GAL_LOAD_GAME('codered');
+  if (!saved) return;
+  // Apply backend values
+  G.totalXp        = saved.totalXp        || G.totalXp;
+  G.totalDefused   = saved.totalDefused   || G.totalDefused;
+  G.level          = saved.level          || G.level;
+  G.currentLevel   = saved.currentLevel   || G.currentLevel;
+  G.maxStreak      = saved.maxStreak      || G.maxStreak;
+  G.maxCombo       = saved.maxCombo       || G.maxCombo;
+  G.lang           = saved.lang           || G.lang;
+  if (saved.levelsCompleted) G.levelsCompleted = saved.levelsCompleted;
+  if (saved.levelGrades)     G.levelGrades     = saved.levelGrades;
+  if (saved.powerups)        G.powerups        = saved.powerups;
+  // Persist locally too
+  saveProgress();
+  // Re-render UI if already loaded
+  if (typeof updateStatsDisplay === 'function') try { updateStatsDisplay(); } catch {}
+}
+// Run after page boots
+setTimeout(restoreFromBackend, 800);
+
+/* ══════════════════════════════════════════════════════
+   LANGUAGE SELECTION
+══════════════════════════════════════════════════════ */
+const LANG_DETAILS = {
+  js: 'JavaScript — Fix ES6+ bugs: closures, async/await, classes, generators · Dynamic typing · No compilation needed',
+  c:  'C Language — Fix system-level bugs: pointers, malloc/free, structs, string.h · Manual memory management · Closest to hardware',
+  cpp:'C++ — Fix OOP/STL bugs: templates, smart pointers, lambdas, RAII · Modern C++17 patterns · Zero-cost abstractions',
+};
+
+function selectLang(btn, lang) {
+  G.lang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const info = document.getElementById('lang-info');
+  if (info) info.textContent = LANG_DETAILS[lang];
+  const siLang = document.getElementById('si-lang');
+  if (siLang) siLang.textContent = lang.toUpperCase();
+  G.currentLevel = 1; // Reset to level 1 for new language
+  renderLevelGrid();
+  saveProgress();
+}
+
+function updateLangUI() {
+  // Update all language indicators in game HUD
+  const li = LANG_INFO[G.lang];
+  const hudLang = document.getElementById('hud-lang');
+  if (hudLang) { hudLang.textContent = li.label; hudLang.className = `hud-lang ${li.cls}`; }
+  // Update placeholder
+  const ed = document.getElementById('code-editor');
+  if (ed) {
+    const placeholders = {js:'// Fix the JavaScript code...', c:'/* Fix the C code... */', cpp:'// Fix the C++ code...'};
+    ed.placeholder = placeholders[G.lang];
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   INTRO TABS
+══════════════════════════════════════════════════════ */
+function switchTab(btn, tabId) {
+  document.querySelectorAll('.itab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.itab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+  if (tabId==='tab-stats') renderStatsTab();
+}
+
+/* ══════════════════════════════════════════════════════
+   LEVEL GRID
+══════════════════════════════════════════════════════ */
+function renderLevelGrid() {
+  const grid = document.getElementById('level-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const done = G.levelsCompleted[G.lang] || [];
+  const grades = G.levelGrades[G.lang] || {};
+  for (let i = 1; i <= 10; i++) {
+    const isDone = done.includes(i);
+    const isCurrent = (i === G.currentLevel);
+    const isLocked = (!isDone && i > G.currentLevel);
+    const grade = grades[i];
+    const dot = document.createElement('div');
+    dot.className = 'level-dot'+(isDone?' completed':isCurrent?' current':isLocked?' locked':'');
+    dot.innerHTML = (isDone?'✓':i) + (grade?`<div class="lvl-grade">${grade}</div>`:'');
+    dot.title = isDone?`L${i} — DONE (${grade||'?'})`:isCurrent?`L${i} — CURRENT`:`L${i} — ${isLocked?'LOCKED':'UNLOCKED'}`;
+    if (!isLocked) dot.onclick = () => { G.currentLevel = i; showBriefing(); };
+    grid.appendChild(dot);
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   STATS TAB
+══════════════════════════════════════════════════════ */
+function renderStatsTab() {
+  const el = document.getElementById('stats-breakdown');
+  if (!el) return;
+  const jsD = (G.levelsCompleted.js||[]).length;
+  const cD  = (G.levelsCompleted.c||[]).length;
+  const cppD = (G.levelsCompleted.cpp||[]).length;
+  const data = [
+    {lbl:'TOTAL XP', val:G.totalXp.toLocaleString()},
+    {lbl:'JS LEVELS', val:`${jsD}/10`},
+    {lbl:'C LEVELS', val:`${cD}/10`},
+    {lbl:'C++ LEVELS', val:`${cppD}/10`},
+    {lbl:'BEST STREAK', val:G.maxStreak+'x'},
+    {lbl:'BEST COMBO', val:G.maxCombo+'x'},
+  ];
+  el.innerHTML = data.map(s=>`<div class="stat-box"><div class="stat-val">${s.val}</div><div class="stat-lbl">${s.lbl}</div></div>`).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   BRIEFING
+══════════════════════════════════════════════════════ */
+function showBriefing() {
+  const lvl = G.currentLevel;
+  const briefs = LEVEL_BRIEFINGS[G.lang];
+  const brief = briefs[lvl-1] || briefs[0];
+  const cfg = MODES[G.mode];
+  const m=Math.floor(cfg.time/60),s=cfg.time%60;
+
+  document.getElementById('brief-level').textContent = `LEVEL ${lvl} / 10`;
+  document.getElementById('brief-title').textContent = brief.title;
+  document.getElementById('brief-lore').textContent = brief.lore;
+  document.getElementById('brief-stages').textContent = '6';
+  document.getElementById('brief-time').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  document.getElementById('brief-mode').textContent = G.mode.toUpperCase();
+  document.getElementById('brief-lang').textContent = LANG_INFO[G.lang].label;
+  document.getElementById('brief-mul').textContent = `x${cfg.mul.toFixed(1)}`;
+  document.getElementById('brief-obj-list').innerHTML = brief.objectives.map((o,i)=>
+    `<div class="brief-obj"><div class="brief-obj-num">${String(i+1).padStart(2,'0')}</div><div>${o}</div></div>`
+  ).join('');
+  const modal = document.getElementById('briefing-modal');
+  modal.classList.add('show');
+  clearInterval(G.briefCountdownInt);
+  let ct = 30;
+  document.getElementById('brief-countdown').textContent = `AUTO-START IN ${ct} SECONDS`;
+  G.briefCountdownInt = setInterval(() => {
+    ct--;
+    const el = document.getElementById('brief-countdown');
+    if (el) el.textContent = `AUTO-START IN ${ct} SECONDS`;
+    if (ct <= 0) { clearInterval(G.briefCountdownInt); startGame(); }
+  }, 1000);
+}
+
+const MODES = {
+  solo:      {time:300, mul:1.0, label:'SOLO DEFUSION'},
+  nightmare: {time:180, mul:1.8, label:'NIGHTMARE MODE'},
+  speed:     {time:120, mul:2.2, label:'SPEED RUN'},
+};
+
+function selectMode(btn, mode) {
+  G.mode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function calcGrade(mistakes=G.wrongCount, timeLeft=G.timer) {
+  if (mistakes === 0 && timeLeft >= 120) return 'S';
+  if (mistakes <= 1 && timeLeft >= 60)   return 'A';
+  if (mistakes <= 3)                     return 'B';
+  if (G.running || mistakes < 99)        return 'C';
+  return 'F';
+}
+
+function updateLiveGrade() {
+  const grade = calcGrade();
+  const el = document.getElementById('live-grade');
+  const bg = document.getElementById('bottom-grade');
+  if (!el) return;
+  el.textContent = grade; el.className = 'grade-val ' + grade;
+  if (bg) { bg.textContent = grade; bg.className = 'bottom-grade grade-' + grade; }
+}
+
+/* ══════════════════════════════════════════════════════
+   POWERUPS
+══════════════════════════════════════════════════════ */
+function updatePowerupHUD() {
+  ['freeze','shield','hint','surge'].forEach(id => {
+    const cnt = G.powerups[id] || 0;
+    const el = document.getElementById(`pu-${id}`);
+    const cn = document.getElementById(`pu-${id}-cnt`);
+    if (el) el.classList.toggle('empty', cnt === 0);
+    if (cn) cn.textContent = cnt;
+  });
+}
+
+function usePowerup(type) {
+  const cnt = G.powerups[type] || 0;
+  if (cnt <= 0 || !G.running) return;
+  G.powerups[type]--;
+  updatePowerupHUD();
+  saveProgress();
+  switch(type) {
+    case 'freeze':
+      G.activePowerups.frozen = true;
+      G.freezeTimeLeft = 30;
+      document.getElementById('timer').classList.add('frozen');
+      document.getElementById('frozen-overlay').classList.add('active');
+      showToast('❄','TIMER FROZEN!','30 second freeze activated!');
+      tLog('[PU] ❄ Timer frozen for 30s!','ai');
+      let fi = setInterval(() => {
+        G.freezeTimeLeft--;
+        if (G.freezeTimeLeft <= 0) { clearInterval(fi); G.activePowerups.frozen=false; document.getElementById('timer').classList.remove('frozen'); document.getElementById('frozen-overlay').classList.remove('active'); }
+      },1000);
+      break;
+    case 'shield':
+      G.activePowerups.shielded = true;
+      showToast('🛡','SHIELD ACTIVE!','Next wrong answer absorbed.');
+      tLog('[PU] 🛡 Error shield active!','ai');
+      break;
+    case 'hint':
+      const s = G.stages[G.stage];
+      if (!s) break;
+      // Show pre-written hint immediately while we ask Gemini for a richer one
+      const hintBox = document.getElementById('hint-box');
+      const hintTxt = document.getElementById('hint-text');
+      hintTxt.textContent = s.hint;
+      hintBox.style.display = 'block';
+      if (window.GAL_HINT) {
+        const ctx = `Bug-fix challenge in ${LANG_INFO[G.lang]?.label || 'JavaScript'}:\n\n${s.desc?.replace(/<[^>]+>/g,'')}\n\nCode:\n${(s.code||'').replace(/<[^>]+>/g,'')}\n\nPre-written hint: ${s.hint}\n\nGive ONE sentence guiding the player to the fix WITHOUT revealing the exact answer. Plain text only.`;
+        window.GAL_HINT(ctx, s.hint).then(aiHint => {
+          hintTxt.innerHTML = `<span style="color:var(--cyan);font-size:.55rem;letter-spacing:.18em;">🤖 AI ORACLE</span><br>${aiHint.replace(/[<>]/g, c=>c==='<'?'&lt;':'&gt;')}`;
+        }).catch(()=>{});
+      }
+      break;
+    case 'surge':
+      G.activePowerups.surge = true;
+      G.surgeStagesLeft = 2;
+      showToast('⚡','XP SURGE!','2x XP for next 2 stages!');
+      break;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   AUDIO
+══════════════════════════════════════════════════════ */
+let _ac = null;
+function ac(){if(!_ac)try{_ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}return _ac;}
+function beep(freq=440,dur=.1,vol=.15,type='square',delay=0){
+  const ctx=ac();if(!ctx)return;
+  try{const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);
+  o.type=type;o.frequency.value=freq;const t=ctx.currentTime+delay;
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);o.start(t);o.stop(t+dur+.05);}catch(e){}
+}
+const sfx = {
+  key: ()=>beep(180+Math.random()*100,.04,.05,'sawtooth'),
+  correct: ()=>[523,659,784,1047].forEach((f,i)=>beep(f,.25,.2,'sine',i*.1)),
+  wrong: ()=>[200,150,100].forEach((f,i)=>beep(f,.3,.35,'sawtooth',i*.1)),
+  alarm: ()=>{beep(880,.15,.25,'square');beep(660,.15,.25,'square',.15);},
+  success: ()=>[600,700,800,900,1000,1200].forEach((f,i)=>beep(f,.3,.25,'sine',i*.12)),
+  tick: ()=>beep(80,.05,.08,'sine'),
+  explode: ()=>{const ctx=ac();if(!ctx)return;try{const buf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(ctx.sampleRate*.25));const s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=buf;s.connect(g);g.connect(ctx.destination);g.gain.value=2;s.start();beep(40,.8,.8,'sine',0);}catch(e){}}
+};
+
+/* ══════════════════════════════════════════════════════
+   THREE.JS BACKGROUND
+══════════════════════════════════════════════════════ */
+function initBackground() {
+  const canvas = document.getElementById('bg-canvas');
+  G.bgScene = new THREE.Scene();
+  G.bgCamera = new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,1000);
+  G.bgCamera.position.z = 5;
+  G.bgRenderer = new THREE.WebGLRenderer({canvas,alpha:true,antialias:false});
+  G.bgRenderer.setSize(innerWidth,innerHeight);
+  G.bgRenderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+  const geo = new THREE.BufferGeometry();
+  const N=1800, pos=new Float32Array(N*3), col=new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    pos[i*3]=(Math.random()-.5)*32;pos[i*3+1]=(Math.random()-.5)*22;pos[i*3+2]=(Math.random()-.5)*20;
+    const r=Math.random();
+    if(r<.5){col[i*3]=1;col[i*3+1]=.08;col[i*3+2]=.08;}
+    else if(r<.75){col[i*3]=0;col[i*3+1]=.9;col[i*3+2]=.9;}
+    else{col[i*3]=.4;col[i*3+1]=.4;col[i*3+2]=.4;}
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  G.bgParticles=new THREE.Points(geo,new THREE.PointsMaterial({size:.035,vertexColors:true,transparent:true,opacity:.65}));
+  G.bgScene.add(G.bgParticles);
+  let t=0;
+  (function bgLoop(){requestAnimationFrame(bgLoop);t+=.005;
+    if(G.bgParticles){G.bgParticles.rotation.y=t*.4;G.bgParticles.rotation.x=t*.12;}
+    G.bgRenderer.render(G.bgScene,G.bgCamera);})();
+}
+
+/* ══════════════════════════════════════════════════════
+   3D BOMB
+══════════════════════════════════════════════════════ */
+function initBomb() {
+  const canvas=document.getElementById('bomb-canvas');
+  const W=200,H=180;canvas.width=W;canvas.height=H;
+  G.bombScene=new THREE.Scene();G.bombCamera=new THREE.PerspectiveCamera(50,W/H,.1,100);
+  G.bombCamera.position.set(0,0,3.5);
+  G.bombRenderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+  G.bombRenderer.setSize(W,H);
+  const scene=G.bombScene;
+  scene.add(new THREE.AmbientLight(0x110000,.8));
+  const rl=new THREE.PointLight(0xff1100,3,8);rl.position.set(0,2,2);scene.add(rl);G._redLight=rl;
+  const bodyMat=new THREE.MeshStandardMaterial({color:0x080000,metalness:.95,roughness:.15,emissive:0x110000,emissiveIntensity:.3});
+  G.bombBody=new THREE.Mesh(new THREE.SphereGeometry(.9,32,32),bodyMat);scene.add(G.bombBody);
+  const bandMat=new THREE.MeshStandardMaterial({color:0x1a0000,metalness:1,roughness:.05});
+  scene.add(new THREE.Mesh(new THREE.TorusGeometry(.9,.05,16,64),bandMat));
+  for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2;const bolt=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.08,8),new THREE.MeshStandardMaterial({color:0x0d0d0d,metalness:1,roughness:.2}));bolt.position.set(Math.cos(a)*.88,Math.sin(a)*.88,.02);bolt.rotation.x=Math.PI/2;scene.add(bolt);}
+  const disp=new THREE.Mesh(new THREE.BoxGeometry(.55,.3,.05),new THREE.MeshStandardMaterial({color:0x000000,emissive:0x440000,emissiveIntensity:1}));disp.position.set(0,-.05,.88);scene.add(disp);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.18,.012,8,32),new THREE.MeshBasicMaterial({color:0xff0000}));ring.position.set(0,-.05,.91);scene.add(ring);G._ring=ring;
+  const fusePts=[new THREE.Vector3(0,.9,0),new THREE.Vector3(.1,1.2,.1),new THREE.Vector3(-.05,1.5,0),new THREE.Vector3(.08,1.8,.05)];
+  scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(fusePts),20,.02,8),new THREE.MeshStandardMaterial({color:0x664400,roughness:.9})));
+  G.bombSparkMat=new THREE.MeshBasicMaterial({color:0xffaa00});
+  G.bombSpark=new THREE.Mesh(new THREE.SphereGeometry(.065,8,8),G.bombSparkMat);G.bombSpark.position.copy(fusePts[3]);scene.add(G.bombSpark);
+  G.bombSparkLight=new THREE.PointLight(0xffaa00,2,1.8);G.bombSparkLight.position.copy(fusePts[3]);scene.add(G.bombSparkLight);
+  const fpPos=new Float32Array(40*3),fpGeo=new THREE.BufferGeometry();
+  fpGeo.setAttribute('position',new THREE.BufferAttribute(fpPos,3));
+  const fp=new THREE.Points(fpGeo,new THREE.PointsMaterial({color:0xff8800,size:.06,transparent:true,opacity:.9}));
+  scene.add(fp);G._fusePoints=fp;G._fusePosArr=fpPos;G._fuseTip=fusePts[3];
+  let f=0;
+  function bombLoop(){
+    G.bombAnimId=requestAnimationFrame(bombLoop);f++;const t=f*.018;
+    G.bombBody.rotation.y=t*.4;G.bombBody.rotation.x=Math.sin(t*.3)*.1;
+    G._redLight.intensity=2.5+Math.sin(t*3)*1.5*(1+G.danger/100);
+    if(G._ring)G._ring.material.color.setHSL(0,1,.4+Math.sin(t*4)*.2);
+    const ss=.8+Math.sin(t*14)*.4;G.bombSpark.scale.setScalar(ss);
+    G.bombSparkLight.intensity=1.5+Math.sin(t*11)*1.5;
+    const sp=G._fuseTip;
+    for(let i=0;i<40;i++){const ii=i*3;if(Math.random()<.12){G._fusePosArr[ii]=sp.x+(Math.random()-.5)*.18;G._fusePosArr[ii+1]=sp.y+(Math.random()-.5)*.18;G._fusePosArr[ii+2]=sp.z+(Math.random()-.5)*.18;}else{G._fusePosArr[ii+1]+=.006;G._fusePosArr[ii]*=.96;}}
+    G._fusePoints.geometry.attributes.position.needsUpdate=true;
+    G.bombRenderer.render(G.bombScene,G.bombCamera);
+  }
+  bombLoop();
+}
+
+/* ══════════════════════════════════════════════════════
+   TERMINAL
+══════════════════════════════════════════════════════ */
+function tLog(msg,cls='',delay=0){
+  setTimeout(()=>{
+    const t=document.getElementById('terminal');if(!t)return;
+    const d=document.createElement('div');d.className='t-line'+(cls?' '+cls:'');d.innerHTML=msg;
+    t.appendChild(d);if(t.children.length>80)t.removeChild(t.children[0]);
+    t.scrollTop=t.scrollHeight;},delay);
+}
+
+function initTerminal(){
+  document.getElementById('terminal').innerHTML='';
+  const cfg=MODES[G.mode];
+  const langName = LANG_INFO[G.lang].label;
+  [
+    {m:`<span class="t-prompt">root@cr:~$</span> ./defuse --lang ${G.lang} --level ${G.currentLevel}`,c:'',d:0},
+    {m:`[SYS] Language: ${langName}`,c:'warn',d:200},
+    {m:`[SYS] Level ${G.currentLevel}/10 · ${cfg.time}s · x${cfg.mul} XP`,c:'sys',d:400},
+    {m:'[OK]  Syntax analyzer: ONLINE',c:'ok',d:600},
+    {m:'[AI]  Claude Advisor: CONNECTED',c:'ai',d:800},
+    {m:`[WARN] S-RANK: 0 mistakes + 2min left`,c:'grade',d:1000},
+  ].forEach(({m,c,d})=>tLog(m,c,d));
+}
+
+/* ══════════════════════════════════════════════════════
+   STAGE RENDERING
+══════════════════════════════════════════════════════ */
+function renderStagePips(){
+  const el=document.getElementById('stages-track');el.innerHTML='';
+  G.stages.forEach((s,i)=>{
+    const pip=document.createElement('div');
+    const cls=i<G.stage?'done':i===G.stage?'current':'locked';
+    pip.className=`stage-pip ${cls}`;pip.textContent=i<G.stage?'✓':(i+1);
+    pip.title=s.title;el.appendChild(pip);});
+}
+
+function renderWires(){
+  for(let i=1;i<=6;i++){
+    const w=document.getElementById(`wire-${i}`);if(!w)continue;
+    const idx=i-1;w.classList.remove('cut','active-wire');
+    if(idx<G.stage)w.classList.add('cut');
+    else if(idx===G.stage)w.classList.add('active-wire');
+  }
+}
+
+function updateLineNums(){
+  const lines=document.getElementById('code-editor').value.split('\n').length;
+  let h='';for(let i=1;i<=Math.max(lines,10);i++)h+=i+'<br>';
+  document.getElementById('line-nums').innerHTML=h;
+  updateHighlight();
+}
+
+function updateHighlight(){
+  const ed = document.getElementById('code-editor');
+  const hi = document.getElementById('code-highlight');
+  if (!hi) return;
+  hi.innerHTML = highlight(ed.value, G.lang) + '\n';
+}
+
+function loadStage(idx){
+  if(idx>=G.stages.length){triggerSuccess();return;}
+  G.stage=idx;const s=G.stages[idx];
+  G.originalCode = s.code;
+  document.getElementById('stage-badge').textContent=`STAGE ${String(idx+1).padStart(2,'0')}`;
+  document.getElementById('stage-type').textContent=s.type;
+  const lt = document.getElementById('stage-lang-tag');
+  if (lt) { lt.textContent = s.lang; lt.className = `stage-lang-tag ${s.lang}`; }
+  document.getElementById('stage-title').textContent=s.title;
+  document.getElementById('stage-pts').textContent=`+${s.points} XP`;
+  document.getElementById('challenge-desc').innerHTML=s.desc;
+  document.getElementById('code-editor').value=s.code;
+  document.getElementById('h-stage').textContent=`${idx+1}/${G.stages.length}`;
+  updateLineNums();renderStagePips();renderWires();updateLiveGrade();
+  const cp = document.querySelector('.code-panel');
+  if (cp) { cp.classList.remove('stage-transition'); void cp.offsetWidth; cp.classList.add('stage-transition'); }
+  tLog(`[STAGE ${idx+1}] ${s.lang}·${s.type}: ${s.title}`,'warn',80);
+}
+
+function resetCode(){
+  if (!G.running) return;
+  document.getElementById('code-editor').value = G.originalCode;
+  updateLineNums();
+  tLog('[SYS] Code reset to original.','warn');
+}
+
+/* ══════════════════════════════════════════════════════
+   GAME FLOW
+══════════════════════════════════════════════════════ */
+function startGame(){
+  clearInterval(G.briefCountdownInt);
+  document.getElementById('briefing-modal').classList.remove('show');
+  hideExplosion();
+  ['feedback-overlay','success-overlay'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('hint-box').style.display='none';
+  document.getElementById('ai-panel').classList.remove('open');
+
+  const cfg=MODES[G.mode];
+  // Build 6 stages from current language — 3 from current level + 3 nearby
+  const bank = ALL_CHALLENGES[G.lang];
+  const levelChallenges = bank.filter(c=>c.lvl===G.currentLevel);
+  const others = bank.filter(c=>c.lvl!==G.currentLevel).sort((a,b)=>{
+    const da=Math.abs(a.lvl-G.currentLevel),db=Math.abs(b.lvl-G.currentLevel);
+    return da-db || Math.random()-.5;
+  });
+  G.stages = [...levelChallenges, ...others].slice(0,6);
+
+  G.stage=0;G.xp=0;G.combo=1;G.streak=0;
+  G.danger=10;G.wrongCount=0;G.hintsUsed=0;
+  G.timer=cfg.time;G.timerMax=cfg.time;
+  G.running=true;G.paused=false;
+  G.startTime=Date.now();
+  G.activePowerups={frozen:false,shielded:false,surge:false};
+  G.surgeStagesLeft=0;
+
+  document.getElementById('intro').style.display='none';
+  document.getElementById('game').style.display='flex';
+  document.getElementById('mode-display').textContent=cfg.label;
+  document.getElementById('pause-btn').textContent='▐▐';
+  document.getElementById('bomb-level-tag').textContent=`LVL ${G.currentLevel} · ${LANG_INFO[G.lang].label.toUpperCase()}`;
+  document.getElementById('ai-messages').innerHTML=`<div class="ai-msg bot"><div class="ai-tag">CLAUDE AI</div>${LANG_INFO[G.lang].label} Level ${G.currentLevel} armed. Ask me anything!</div>`;
+
+  updateLangUI();
+  updatePowerupHUD();
+  initTerminal();renderStagePips();loadStage(0);updateHUD();startTimer();
+}
+
+/* ══════════════════════════════════════════════════════
+   TIMER
+══════════════════════════════════════════════════════ */
+function startTimer(){
+  clearInterval(G.timerInt);
+  G.timerInt=setInterval(()=>{
+    if(G.paused||!G.running)return;
+    if(!G.activePowerups.frozen){G.timer--;}
+    updateTimerDisplay();updateLiveGrade();
+    if(G.timer<=0){clearInterval(G.timerInt);triggerExplosion();return;}
+    if(G.timer<=15&&G.timer%2===0)sfx.alarm();
+    else if(G.timer<=30&&G.timer%3===0)sfx.alarm();
+    else if(G.timer%15===0)sfx.tick();},1000);
+}
+
+function updateTimerDisplay(){
+  const m=Math.floor(G.timer/60),s=G.timer%60;
+  const el=document.getElementById('timer');
+  el.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if(!G.activePowerups.frozen)el.className='timer-display'+(G.timer<=30?' warning':'');
+}
+
+function togglePause(){
+  G.paused=!G.paused;
+  document.getElementById('pause-btn').textContent=G.paused?'▶':'▐▐';
+  tLog(G.paused?'[SYS] Paused.':'[SYS] Resumed.','sys');
+}
+
+/* ══════════════════════════════════════════════════════
+   SUBMIT
+══════════════════════════════════════════════════════ */
+function submitSolution(){
+  if(!G.running||G.paused)return;
+  const code=document.getElementById('code-editor').value.trim();
+  const stage=G.stages[G.stage];
+  if(!code||code===stage.code.trim()){tLog('[ERR] Modify the code before submitting!','err');sfx.wrong();return;}
+  if(stage.check(code)){onCorrect(stage);}
+  else onWrong(stage);
+}
+
+function onCorrect(s){
+  G.streak++;G.maxStreak=Math.max(G.maxStreak,G.streak);
+  G.combo=Math.min(Math.floor(G.streak/2)+1,5);
+  G.maxCombo=Math.max(G.maxCombo,G.combo);
+  const modeMul=MODES[G.mode].mul;
+  const surgeMul=G.activePowerups.surge?2:1;
+  const gained=Math.round(s.points*G.combo*modeMul*surgeMul);
+  G.xp+=gained;G.totalXp+=gained;
+  G.danger=Math.max(10,G.danger-18);
+  if(G.activePowerups.surge){G.surgeStagesLeft--;if(G.surgeStagesLeft<=0)G.activePowerups.surge=false;}
+  saveProgress();sfx.correct();
+  if(G.bombSparkMat)G.bombSparkMat.color.setHex(0x00ff44);
+  setTimeout(()=>{if(G.bombSparkMat)G.bombSparkMat.color.setHex(0xffaa00);},700);
+  document.getElementById('app').classList.add('green-flash');setTimeout(()=>document.getElementById('app').classList.remove('green-flash'),400);
+  const fb=document.getElementById('feedback-box');fb.className='feedback-box';
+  document.getElementById('fb-icon').textContent='✓';
+  document.getElementById('fb-title').textContent='WIRE SEVERED';
+  document.getElementById('fb-sub').textContent=`Stage ${G.stage+1} complete!${G.combo>1?` x${G.combo} combo!`:''}`;
+  document.getElementById('fb-xp').textContent=`+${gained} XP${surgeMul>1?' (SURGE!)':''}${G.combo>1?` (x${G.combo} COMBO)`:''}`;
+  const cg=calcGrade();
+  document.getElementById('fb-grade').textContent=cg;
+  document.getElementById('fb-grade').className=`feedback-grade grade-${cg}`;
+  document.getElementById('feedback-overlay').classList.add('active');
+  tLog(`[OK] Stage ${G.stage+1} solved! +${gained} XP · Streak: ${G.streak}`,'ok');
+  updateHUD();
+  setTimeout(()=>{document.getElementById('feedback-overlay').classList.remove('active');loadStage(G.stage+1);},1800);
+}
+
+function onWrong(s){
+  if(G.activePowerups.shielded){
+    G.activePowerups.shielded=false;
+    showToast('🛡','SHIELD ABSORBED!','Wrong answer blocked!');
+    tLog('[SHIELD] 🛡 Error shield blocked the penalty!','ai');
+    document.getElementById('app').classList.add('cyan-flash');setTimeout(()=>document.getElementById('app').classList.remove('cyan-flash'),400);
+    return;
+  }
+  G.streak=0;G.combo=1;G.danger=Math.min(100,G.danger+22);G.wrongCount++;
+  G.timer=Math.max(0,G.timer-20);sfx.wrong();
+  document.getElementById('app').classList.add('red-flash');setTimeout(()=>document.getElementById('app').classList.remove('red-flash'),500);
+  const fb=document.getElementById('feedback-box');fb.className='feedback-box fail';
+  document.getElementById('fb-icon').textContent='✗';
+  document.getElementById('fb-title').textContent='WRONG CODE';
+  document.getElementById('fb-sub').textContent='Incorrect! −20 seconds penalty. Combo reset.';
+  document.getElementById('fb-xp').textContent=`⚠ DANGER +22% — ${G.danger}%`;
+  document.getElementById('fb-grade').textContent='';
+  document.getElementById('feedback-overlay').classList.add('active');
+  tLog(`[ERR] Wrong! −20s. Danger: ${G.danger}% · Mistakes: ${G.wrongCount}`,'err');
+  updateHUD();updateTimerDisplay();updateLiveGrade();
+  setTimeout(()=>document.getElementById('feedback-overlay').classList.remove('active'),1600);
+}
+
+/* ══════════════════════════════════════════════════════
+   AI ASSISTANT
+══════════════════════════════════════════════════════ */
+function toggleAI(){document.getElementById('ai-panel').classList.toggle('open');}
+function aiQuick(msg){document.getElementById('ai-input').value=msg;sendAI();}
+
+async function sendAI(){
+  const input=document.getElementById('ai-input');
+  const msg=input.value.trim();if(!msg)return;input.value='';
+  const msgs=document.getElementById('ai-messages');
+  const stage=G.stages[G.stage]||{};
+  const langName = LANG_INFO[G.lang].label;
+  const userDiv=document.createElement('div');userDiv.className='ai-msg user';userDiv.textContent=msg;msgs.appendChild(userDiv);
+  const thinkDiv=document.createElement('div');thinkDiv.className='ai-msg thinking';thinkDiv.textContent=`⟳ Analyzing ${langName} code...`;msgs.appendChild(thinkDiv);
+  msgs.scrollTop=msgs.scrollHeight;
+
+  // Local AI response (no backend needed)
+  await new Promise(r=>setTimeout(r,800));
+  thinkDiv.remove();
+  const hint = stage.hint || 'Review the challenge description carefully.';
+  let reply = '';
+  const q = msg.toLowerCase();
+  if(q.includes('wrong')||q.includes('error')){
+    reply = `This is a <b>${stage.type}</b> challenge in ${langName}. The error is described at the top of the editor panel. Read it carefully — the exact bug type is highlighted.`;
+  } else if(q.includes('nudge')||q.includes('hint')){
+    reply = `Tactical nudge: ${hint}`;
+  } else if(q.includes('concept')){
+    const concepts = {
+      SYNTAX:'function/variable syntax rules',POINTER:'pointer declaration and dereferencing (*,&,-&gt;)',
+      MEMORY:'malloc/free memory management',STRUCT:'struct member access (./->)',
+      ARRAY:'array bounds and indexing',STRING:'C string operations (strcmp,strcpy,strlen)',
+      PREPROCESSOR:'#define macros and include guards',BITFIELD:'bitwise operators (&,|,^,<<)',
+      FILEIO:'file operations (fopen,fclose,fread,fwrite)',RECURSION:'base case in recursive functions',
+      CLASS:'C++ class structure and access modifiers',STL:'Standard Template Library containers',
+      INHERIT:'virtual functions and inheritance chains',TEMPLATE:'template<typename T> syntax',
+      SMARTPTR:'unique_ptr and shared_ptr ownership',OPERATOR:'operator overloading signatures',
+      EXCEPTION:'throw/catch exception handling',LAMBDA:'lambda capture lists and syntax',
+      RAII:'Resource Acquisition Is Initialization (destructors)',
+      LOGIC:'comparison operators and boolean logic',SCOPE:'variable scope and block boundaries',
+      ASYNC:'async/await and Promise chains',ERROR:'try/catch and Error objects',
+      CLOSURE:'closure and var/let scoping',FUNCTIONAL:'currying and higher-order functions',
+    };
+    const type = (stage.type||'').toUpperCase();
+    reply = `This stage tests <b>${stage.type}</b> — ${concepts[type]||'core language mechanics'} in ${langName}.`;
+  } else {
+    reply = `${langName} challenge: <b>${stage.title}</b>. Type: ${stage.type}. Nudge: ${hint}`;
+  }
+  const botDiv=document.createElement('div');botDiv.className='ai-msg bot';
+  botDiv.innerHTML=`<div class="ai-tag">AI ADVISOR · ${langName.toUpperCase()}</div>${reply}`;
+  msgs.appendChild(botDiv);msgs.scrollTop=msgs.scrollHeight;
+}
+
+/* ══════════════════════════════════════════════════════
+   HINT
+══════════════════════════════════════════════════════ */
+function toggleHint(){
+  const box=document.getElementById('hint-box');
+  if(box.style.display==='block'){box.style.display='none';return;}
+  const stage=G.stages[G.stage];
+  if(stage)document.getElementById('hint-text').textContent=stage.hint;
+  box.style.display='block';
+  G.hintsUsed++;G.xp=Math.max(0,G.xp-50);
+  tLog('[HINT] Hint accessed. −50 XP penalty.','warn');
+  updateHUD();updateLiveGrade();
+}
+
+/* ══════════════════════════════════════════════════════
+   HUD UPDATE
+══════════════════════════════════════════════════════ */
+function updateHUD(){
+  document.getElementById('h-xp').textContent=G.xp.toLocaleString();
+  document.getElementById('h-combo').textContent=`x${G.combo}`;
+  document.getElementById('streak-display').textContent=`x${G.combo}`;
+  const lvlXp=G.level*1000;
+  document.getElementById('xp-fill').style.width=Math.min(100,(G.xp/lvlXp)*100)+'%';
+  document.getElementById('xp-text').textContent=`${G.xp}/${lvlXp}`;
+  document.getElementById('danger-bar').style.width=G.danger+'%';
+  updateLiveGrade();updatePowerupHUD();
+}
+
+/* ══════════════════════════════════════════════════════
+   SUCCESS
+══════════════════════════════════════════════════════ */
+function triggerSuccess(){
+  G.running=false;clearInterval(G.timerInt);
+  G.totalDefused++;
+  const grade=calcGrade(G.wrongCount,G.timer);
+  if(!G.levelGrades[G.lang]) G.levelGrades[G.lang]={};
+  G.levelGrades[G.lang][G.currentLevel]=grade;
+  if(!G.levelsCompleted[G.lang]) G.levelsCompleted[G.lang]=[];
+  if(!G.levelsCompleted[G.lang].includes(G.currentLevel)){
+    G.levelsCompleted[G.lang].push(G.currentLevel);
+  }
+  const elapsed=Math.floor((Date.now()-G.startTime)/1000);
+  const timeBonus=G.timer*10;
+  const gradeBonus=grade==='S'?1000:grade==='A'?500:grade==='B'?200:0;
+  const finalScore=G.xp+timeBonus+gradeBonus;
+  const mins=String(Math.floor(elapsed/60)).padStart(2,'0'),secs=String(elapsed%60).padStart(2,'0');
+  G.totalXp+=G.xp;
+  if(G.totalXp>=G.level*1000){G.level++;setTimeout(()=>showToast('⬆️','LEVEL UP!',`Reached Level ${G.level}!`),2200);}
+  // Award powerup every 2 clears
+  if(G.totalDefused%2===0){
+    const t=['freeze','shield','hint','surge'];
+    const r=t[Math.floor(Math.random()*t.length)];
+    G.powerups[r]=(G.powerups[r]||0)+1;
+    setTimeout(()=>showToast('🎁','POWERUP EARNED!',`+1 ${r.toUpperCase()}!`),3000);
+  }
+  saveProgress();sfx.success();
+  const gradeEl=document.getElementById('final-grade');
+  gradeEl.textContent=grade;gradeEl.className=`final-grade grade-${grade}`;
+  const descs={S:'PERFECT MISSION',A:'EXCELLENT WORK',B:'MISSION SUCCESS',C:'BARELY MADE IT',F:'FAILED'};
+  document.getElementById('grade-desc').textContent=descs[grade]||'';
+  document.getElementById('success-stats').innerHTML=`
+    <div class="sstat"><div class="sstat-val">${finalScore.toLocaleString()}</div><div class="sstat-lbl">FINAL SCORE</div></div>
+    <div class="sstat"><div class="sstat-val">${G.xp.toLocaleString()}</div><div class="sstat-lbl">XP EARNED</div></div>
+    <div class="sstat"><div class="sstat-val">+${timeBonus}</div><div class="sstat-lbl">TIME BONUS</div></div>
+    <div class="sstat"><div class="sstat-val">+${gradeBonus}</div><div class="sstat-lbl">GRADE BONUS</div></div>
+    <div class="sstat"><div class="sstat-val">${mins}:${secs}</div><div class="sstat-lbl">CLEAR TIME</div></div>
+    <div class="sstat"><div class="sstat-val">${G.wrongCount}</div><div class="sstat-lbl">MISTAKES</div></div>`;
+  setTimeout(()=>document.getElementById('success-overlay').classList.add('active'),600);
+  tLog(`[SUCCESS] ${LANG_INFO[G.lang].label} Level ${G.currentLevel} DEFUSED! Grade: ${grade}!`,'ok');
+  if(grade==='S')showToast('💎','S RANK!','Perfect execution, agent!');
+}
+
+function nextLevel(){
+  document.getElementById('success-overlay').classList.remove('active');
+  // Save stats so the dashboard picks them up on next focus
+  try {
+    const stats = JSON.parse(localStorage.getItem('gal_pending_stats') || '{}');
+    const totalScore = (stats.score || 0) + (G.xp || 0);
+    const totalXp    = (stats.xp_earned || 0) + (G.xp || 0);
+    const rooms      = (stats.rooms_cleared || 0) + 1;
+    const acc        = G.totalAttempts ? Math.round((G.correctAttempts / G.totalAttempts) * 100) : 0;
+    localStorage.setItem('gal_pending_stats', JSON.stringify({
+      score:         totalScore,
+      xp_earned:     totalXp,
+      rooms_cleared: rooms,
+      accuracy:      acc,
+      hints_used:    G.hintsUsed || 0,
+      best_combo:    Math.max(stats.best_combo || 0, G.combo || 1),
+      difficulty:    'codered',
+      activity_msg:  `Code Red: ${LANG_INFO[G.lang].label} L${G.currentLevel} cleared (+${G.xp} XP)`
+    }));
+  } catch {}
+  if(G.currentLevel<10){
+    G.currentLevel++;saveProgress();
+    showToast('🚀',`LEVEL ${G.currentLevel} UNLOCKED!`,'New challenges ready.');
+  }else{
+    showToast('🏆','ALL 10 LEVELS COMPLETE!',`${LANG_INFO[G.lang].label} master!`);
+    G.currentLevel=1;
+  }
+  returnToMenu();
+}
+
+/* ══════════════════════════════════════════════════════
+   EXPLOSION
+══════════════════════════════════════════════════════ */
+function triggerExplosion(){
+  G.running=false;clearInterval(G.timerInt);
+  document.getElementById('exp-fail-msg').textContent=`${LANG_INFO[G.lang].label} L${G.currentLevel} · ${G.stage}/${G.stages.length} stages · ${G.wrongCount} mistake(s) · Grade: F`;
+  const el=document.getElementById('explosion-overlay');el.style.display='block';
+  sfx.explode();
+  const canvas=document.getElementById('exp-canvas');
+  canvas.width=innerWidth;canvas.height=innerHeight;
+  const ctx=canvas.getContext('2d');const cx=innerWidth/2,cy=innerHeight/2;
+  const particles=[];
+  for(let i=0;i<350;i++){const a=Math.random()*Math.PI*2,sp=3+Math.random()*16;particles.push({x:cx,y:cy,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,size:2+Math.random()*6,color:Math.random()<.6?`hsl(${Math.random()*40},100%,${50+Math.random()*30}%)`:`hsl(0,0%,70%)`,alpha:1,decay:.012+Math.random()*.025,gravity:.14+Math.random()*.18});}
+  let frame=0;
+  function expLoop(){
+    frame++;ctx.clearRect(0,0,canvas.width,canvas.height);
+    if(frame<5){ctx.fillStyle=`rgba(255,255,255,${1-frame/5})`;ctx.fillRect(0,0,canvas.width,canvas.height);}
+    const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,280+frame*2.5);
+    grd.addColorStop(0,`rgba(255,80,0,${Math.max(0,.38-frame*.003)})`);grd.addColorStop(1,'transparent');
+    ctx.fillStyle=grd;ctx.fillRect(0,0,canvas.width,canvas.height);
+    for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=p.gravity;p.alpha-=p.decay;if(p.alpha<=0){particles.splice(i,1);continue;}ctx.globalAlpha=p.alpha;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size*p.alpha,0,Math.PI*2);ctx.fill();}
+    ctx.globalAlpha=1;if(frame===45)document.getElementById('exp-ui').classList.add('visible');
+    if(frame<300||particles.length>0)requestAnimationFrame(expLoop);
+  }
+  expLoop();
+  tLog('[DETONATED] BOMB EXPLODED — MISSION FAILED','err');
+}
+
+function hideExplosion(){
+  const el=document.getElementById('explosion-overlay');el.style.display='none';
+  document.getElementById('exp-ui').classList.remove('visible');
+  const canvas=document.getElementById('exp-canvas');if(canvas)canvas.getContext('2d').clearRect(0,0,9999,9999);
+}
+
+/* ══════════════════════════════════════════════════════
+   LEADERBOARD
+══════════════════════════════════════════════════════ */
+function openLeaderboard(){
+  document.getElementById('leaderboard-modal').style.display='block';
+  const entries=[
+    {name:'0xVECTOR_PRIME',score:48250,lang:'JS'},{name:'GH0ST_CIPHER',score:44100,lang:'C++'},
+    {name:'N3URAL_HAXOR',score:41800,lang:'C'},{name:'DARK_KERNEL_9',score:38900,lang:'C++'},
+    {name:'**YOU**',score:G.totalXp,lang:LANG_INFO[G.lang].label}
+  ].sort((a,b)=>b.score-a.score);
+  const rankCls=['g','s','b'];
+  document.getElementById('lb-rows').innerHTML=entries.map((r,i)=>`
+    <div class="lb-row" style="${r.name==='**YOU**'?'background:rgba(255,170,0,.04)':''}">
+      <div class="lb-rank ${rankCls[i]||''}">${i+1}</div>
+      <div class="lb-name" style="${r.name==='**YOU**'?'color:var(--amber)':''}">${r.name==='**YOU**'?'◉ YOU':r.name}</div>
+      <div style="font-size:.52rem;color:var(--text3);margin-left:auto;margin-right:.5rem">${r.lang}</div>
+      <div class="lb-score">${r.score.toLocaleString()}</div>
+    </div>`).join('');
+}
+function closeLeaderboard(){document.getElementById('leaderboard-modal').style.display='none';}
+
+/* ══════════════════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════════════════ */
+function returnToMenu(){
+  G.running=false;clearInterval(G.timerInt);clearInterval(G.briefCountdownInt);
+  hideExplosion();
+  ['feedback-overlay','success-overlay'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('leaderboard-modal').style.display='none';
+  document.getElementById('hint-box').style.display='none';
+  document.getElementById('ai-panel').classList.remove('open');
+  document.getElementById('briefing-modal').classList.remove('show');
+  document.getElementById('game').style.display='none';
+  document.getElementById('intro').style.display='';
+  document.getElementById('si-xp').textContent=G.totalXp.toLocaleString();
+  document.getElementById('si-level').textContent=`LVL ${G.level}`;
+  const done = (G.levelsCompleted[G.lang]||[]).length;
+  document.getElementById('si-defused').textContent=done;
+  document.getElementById('si-lang').textContent=G.lang.toUpperCase();
+  renderLevelGrid();
+  if(!G.bombAnimId&&G.bombScene)initBomb();
+}
+
+/* ══════════════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════════════ */
+function shakeScreen(dur=400){const el=document.getElementById('app');el.classList.remove('shaking');void el.offsetWidth;el.classList.add('shaking');setTimeout(()=>el.classList.remove('shaking'),dur);}
+function showToast(icon,title,msg){
+  document.getElementById('toast-icon').textContent=icon;
+  document.getElementById('toast-title').textContent=title;
+  document.getElementById('toast-msg').textContent=msg;
+  const t=document.getElementById('toast');t.classList.add('show');
+  beep(880,.3,.2,'sine',0);beep(1100,.3,.2,'sine',.15);
+  setTimeout(()=>t.classList.remove('show'),4500);
+}
+
+/* ══════════════════════════════════════════════════════
+   KEYBOARD
+══════════════════════════════════════════════════════ */
+const editor = document.getElementById('code-editor');
+editor.addEventListener('input',()=>{updateLineNums();sfx.key();});
+editor.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();submitSolution();}
+  if(e.key==='Tab'){e.preventDefault();const s=editor.selectionStart;editor.value=editor.value.substring(0,s)+'  '+editor.value.substring(editor.selectionEnd);editor.selectionStart=editor.selectionEnd=s+2;updateLineNums();}
+  updateHighlight();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(document.getElementById('leaderboard-modal').style.display==='block')closeLeaderboard();
+    if(document.getElementById('hint-box').style.display==='block')toggleHint();
+    if(document.getElementById('ai-panel').classList.contains('open'))toggleAI();
+    if(document.getElementById('briefing-modal').classList.contains('show')){clearInterval(G.briefCountdownInt);document.getElementById('briefing-modal').classList.remove('show');}
+  }
+  if((e.ctrlKey||e.metaKey)&&e.key==='p'){e.preventDefault();togglePause();}
+  if(G.running&&!G.paused){
+    if(e.key==='1')usePowerup('freeze');if(e.key==='2')usePowerup('shield');
+    if(e.key==='3')usePowerup('hint');if(e.key==='4')usePowerup('surge');
+  }
+});
+window.addEventListener('resize',()=>{
+  if(G.bgRenderer){G.bgRenderer.setSize(innerWidth,innerHeight);G.bgCamera.aspect=innerWidth/innerHeight;G.bgCamera.updateProjectionMatrix();}
+});
+
+/* ══════════════════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════════════════ */
+window.addEventListener('load', async()=>{
+  loadProgress();
+  const steps=[
+    {msg:'LOADING 3D SUBSYSTEMS...',pct:20},
+    {msg:'LOADING JS CHALLENGE BANK (30 stages)...',pct:40},
+    {msg:'LOADING C CHALLENGE BANK (30 stages)...',pct:60},
+    {msg:'LOADING C++ CHALLENGE BANK (30 stages)...',pct:80},
+    {msg:'INITIALIZING SYNTAX HIGHLIGHTERS...',pct:95},
+    {msg:'SYSTEM READY — v3.0 MULTI-LANGUAGE',pct:100},
+  ];
+  const ldBar=document.getElementById('ld-bar');
+  const ldMsg=document.getElementById('ld-msg');
+  initBackground();
+  for(let i=0;i<steps.length;i++){
+    await new Promise(r=>setTimeout(r,280));
+    ldMsg.textContent=steps[i].msg;ldBar.style.width=steps[i].pct+'%';
+    const step=document.getElementById(`ldstep-${Math.min(i,4)}`);if(step)step.classList.add('done');
+  }
+  initBomb();
+
+  // Set initial language UI
+  document.querySelectorAll('.lang-btn').forEach(b=>{
+    if(b.classList.contains(`lang-${G.lang}`))b.classList.add('active');
+    else b.classList.remove('active');
+  });
+  const info = document.getElementById('lang-info');
+  if (info) info.textContent = LANG_DETAILS[G.lang];
+
+  document.getElementById('si-xp').textContent=G.totalXp.toLocaleString();
+  document.getElementById('si-level').textContent=`LVL ${G.level}`;
+  document.getElementById('si-defused').textContent=(G.levelsCompleted[G.lang]||[]).length;
+  document.getElementById('si-lang').textContent=G.lang.toUpperCase();
+  renderLevelGrid();
+  await new Promise(r=>setTimeout(r,400));
+  const loader=document.getElementById('loading');loader.style.opacity='0';
+  setTimeout(()=>loader.style.display='none',600);
+});
+</script>
+</body>
+</html>
